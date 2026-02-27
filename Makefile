@@ -9,6 +9,7 @@ dev:
 	docker compose -f docker-compose.dev.yml up --build
 
 prod:
+	mkdir -p data && chmod 777 data
 	docker compose up --build -d
 
 down:
@@ -45,7 +46,7 @@ test-e2e:
 
 backup:
 	mkdir -p backups
-	docker compose cp app:/app/data/inventory.db backups/inventory_$$(date +%Y%m%d_%H%M%S).db
+	cp data/inventory.db backups/inventory_$$(date +%Y%m%d_%H%M%S).db
 	@echo "Záloha uložena do backups/"
 
 qr-test:
