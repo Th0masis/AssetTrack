@@ -51,7 +51,7 @@ async def lifespan(application: FastAPI):
 app = FastAPI(
     title="AssetTrack",
     description="Interní inventarizační systém",
-    version="1.4.0",
+    version="1.5.0",
     lifespan=lifespan,
 )
 
