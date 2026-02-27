@@ -3,6 +3,7 @@
 *.pem
 *.key
 *.crt
+nginx/ssl/*.pem
 
 # Python
 __pycache__/

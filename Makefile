@@ -1,4 +1,4 @@
-.PHONY: dev prod seed test test-unit test-api test-e2e migrate backup qr-test logs down
+.PHONY: dev prod seed test test-unit test-api test-e2e migrate backup qr-test logs down ssl
 
 PYTHON = .venv/bin/python
 PYTEST = .venv/bin/python -m pytest
@@ -51,6 +51,19 @@ backup:
 
 qr-test:
 	$(PYTHON) -c "import sys; sys.path.insert(0, '.'); from app.database import SessionLocal, Base, engine; import app.models; Base.metadata.create_all(bind=engine); from app.services.qr_service import generate_batch_pdf; from sqlalchemy import select; from app.models.item import Item; db = SessionLocal(); items = db.scalars(select(Item)).all(); pdf = generate_batch_pdf(db, [i.id for i in items[:4]]) if items else None; [open('/tmp/test-qr-labels.pdf','wb').write(pdf), print('PDF uloženo do /tmp/test-qr-labels.pdf')] if pdf else print('Nejdřív spusť make seed'); db.close()"
+
+# ─── SSL ──────────────────────────────────────────────────────────────────────
+
+ssl:
+	@test -n "$(IP)" || (echo "Usage: make ssl IP=<server-ip>  e.g. make ssl IP=10.24.137.17"; exit 1)
+	mkdir -p nginx/ssl
+	openssl req -x509 -newkey rsa:2048 \
+		-keyout nginx/ssl/key.pem \
+		-out nginx/ssl/cert.pem \
+		-days 365 -nodes \
+		-subj "/CN=$(IP)" \
+		-addext "subjectAltName=IP:$(IP)"
+	@echo "Certifikát vygenerován pro IP: $(IP) (platný 365 dní)"
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
