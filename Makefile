@@ -9,11 +9,12 @@ dev:
 	docker compose -f docker-compose.dev.yml up --build
 
 prod:
+	mkdir -p data
 	docker compose up --build -d
 
 down:
 	docker compose -f docker-compose.dev.yml down 2>/dev/null || true
-	docker-compose down 2>/dev/null || true
+	docker compose down 2>/dev/null || true
 
 logs:
 	docker compose logs -f
