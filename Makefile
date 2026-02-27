@@ -57,12 +57,13 @@ qr-test:
 ssl:
 	@test -n "$(IP)" || (echo "Usage: make ssl IP=<server-ip>  e.g. make ssl IP=10.24.137.17"; exit 1)
 	mkdir -p nginx/ssl
+	@printf "[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=v3_req\n[dn]\nCN=$(IP)\n[v3_req]\nsubjectAltName=IP:$(IP)\n" > /tmp/assettrack_ssl.cnf
 	openssl req -x509 -newkey rsa:2048 \
 		-keyout nginx/ssl/key.pem \
 		-out nginx/ssl/cert.pem \
 		-days 365 -nodes \
-		-subj "/CN=$(IP)" \
-		-addext "subjectAltName=IP:$(IP)"
+		-config /tmp/assettrack_ssl.cnf
+	@rm -f /tmp/assettrack_ssl.cnf
 	@echo "Certifikát vygenerován pro IP: $(IP) (platný 365 dní)"
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
