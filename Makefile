@@ -6,17 +6,17 @@ PYTEST = .venv/bin/python -m pytest
 # ─── Development ─────────────────────────────────────────────────────────────
 
 dev:
-	docker-compose -f docker-compose.dev.yml up --build
+	docker compose -f docker-compose.dev.yml up --build
 
 prod:
-	docker-compose up --build -d
+	docker compose up --build -d
 
 down:
-	docker-compose -f docker-compose.dev.yml down 2>/dev/null || true
+	docker compose -f docker-compose.dev.yml down 2>/dev/null || true
 	docker-compose down 2>/dev/null || true
 
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 # ─── Database ─────────────────────────────────────────────────────────────────
 
