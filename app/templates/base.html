@@ -6,8 +6,8 @@
   <title>{% block title %}AssetTrack{% endblock %}</title>
   <!-- Anti-flash: set theme before CSS loads -->
   <script>(function(){var t=localStorage.getItem('at_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
-  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v=7">
-  <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer></script>
+  <link rel="stylesheet" href="/static/css/app.css?v=7">
+  <script src="/static/js/htmx.min.js" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>

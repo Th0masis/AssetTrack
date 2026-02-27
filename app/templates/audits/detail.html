@@ -3,7 +3,7 @@
 {% block page_title %}{{ audit.name }}{% endblock %}
 {% block head %}
 {% if audit.status == 'open' %}
-<script src="{{ url_for('static', path='js/html5-qrcode.min.js') }}"></script>
+<script src="/static/js/html5-qrcode.min.js"></script>
 {% endif %}
 {% endblock %}
 {% block content %}
