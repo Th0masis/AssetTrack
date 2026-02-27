@@ -49,24 +49,7 @@ backup:
 	@echo "Záloha uložena do backups/"
 
 qr-test:
-	$(PYTHON) -c "
-import sys; sys.path.insert(0, '.')
-from app.database import SessionLocal, Base, engine
-import app.models
-Base.metadata.create_all(bind=engine)
-from app.services.qr_service import generate_batch_pdf
-from sqlalchemy import select
-from app.models.item import Item
-db = SessionLocal()
-items = db.scalars(select(Item)).all()
-if not items:
-    print('Nejdřív spusť make seed')
-else:
-    pdf = generate_batch_pdf(db, [i.id for i in items[:4]])
-    with open('/tmp/test-qr-labels.pdf', 'wb') as f: f.write(pdf)
-    print('PDF uloženo do /tmp/test-qr-labels.pdf')
-db.close()
-"
+	$(PYTHON) -c "import sys; sys.path.insert(0, '.'); from app.database import SessionLocal, Base, engine; import app.models; Base.metadata.create_all(bind=engine); from app.services.qr_service import generate_batch_pdf; from sqlalchemy import select; from app.models.item import Item; db = SessionLocal(); items = db.scalars(select(Item)).all(); pdf = generate_batch_pdf(db, [i.id for i in items[:4]]) if items else None; [open('/tmp/test-qr-labels.pdf','wb').write(pdf), print('PDF uloženo do /tmp/test-qr-labels.pdf')] if pdf else print('Nejdřív spusť make seed'); db.close()"
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
