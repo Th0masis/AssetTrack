@@ -8,12 +8,17 @@ from contextlib import asynccontextmanager
 from jinja2 import pass_context
 import os
 
-from app.database import engine
+from app.database import engine, SessionLocal
 from app.database import Base
 import app.models  # noqa — register all models
+from app.models.user import User
 from app.config import settings
+from app.services.user_service import hash_password
 from app.routers import health, items, locations, moves, audits, qr, export, scan, disposals
 from app.routers import ui, auth_ui, admin_ui
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -21,6 +26,24 @@ async def lifespan(application: FastAPI):
     # Ensure DB exists and tables are created (for dev mode without alembic)
     os.makedirs("data", exist_ok=True)
     Base.metadata.create_all(bind=engine)
+
+    # Create first admin user if no users exist yet
+    db = SessionLocal()
+    try:
+        if not db.query(User).first():
+            admin = User(
+                username=settings.FIRST_ADMIN_USER,
+                email=f"{settings.FIRST_ADMIN_USER}@assettrack.local",
+                hashed_password=hash_password(settings.FIRST_ADMIN_PASS),
+                role="admin",
+                is_active=True,
+            )
+            db.add(admin)
+            db.commit()
+            logger.info("Vytvořen první admin uživatel: %s", settings.FIRST_ADMIN_USER)
+    finally:
+        db.close()
+
     yield
 
 
