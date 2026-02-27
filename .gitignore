@@ -1,0 +1,48 @@
+# Secrets
+.env
+*.pem
+*.key
+*.crt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data & DB
+data/*.db
+data/*.sqlite
+backups/
+
+# Logs
+*.log
+
+# Virtual envs
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Design / prototypy (lokální pracovní soubory)
+design/
+
+# Claude Code
+.claude/

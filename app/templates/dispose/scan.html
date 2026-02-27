@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Vyřazení skenem — AssetTrack{% endblock %}
+{% block page_title %}Vyřazení skenem{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', path='js/html5-qrcode.min.js') }}"></script>
+{% endblock %}
+{% block content %}
+
+<div class="scan-outer">
+  <!-- Scanner panel -->
+  <div id="scannerPanel">
+    <div class="scan-viewfinder">
+      <div class="scan-bg-text">NAMIŘ KAMERU NA QR KÓD</div>
+      <div id="qr-reader"></div>
+      <div class="scan-frame" style="pointer-events:none">
+        <div class="sc tl"></div><div class="sc tr"></div>
+        <div class="sc bl"></div><div class="sc br"></div>
+        <div class="scan-sweep"></div>
+      </div>
+    </div>
+    <p class="scan-hint">Naskenujte QR kód položky, kterou chcete vyřadit.</p>
+    <div class="manual-row">
+      <input class="manual-input" type="text" id="manualCode" placeholder="nebo zadej kód ručně">
+      <button class="btn btn-primary" onclick="loadItem(document.getElementById('manualCode').value.trim())">Hledat</button>
+    </div>
+    <div id="scanError" class="flash flash-danger" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <!-- Item panel (after scan) -->
+  <div id="itemPanel" style="display:none">
+    <div class="scan-result-card ok" style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--t3);margin-bottom:8px">Položka nalezena</div>
+      <div style="font-size:17px;font-weight:600;color:var(--t1);margin-bottom:4px" id="itemName">—</div>
+      <span class="id-badge" id="itemCode">—</span>
+    </div>
+
+    <form id="disposeForm">
+      <input type="hidden" id="disposeItemId" name="item_id">
+      <div class="form-group">
+        <label class="form-label">Důvod vyřazení *</label>
+        <select class="form-ctrl" name="reason" required>
+          <option value="">Vyberte důvod…</option>
+          <option value="liquidation">Fyzická likvidace</option>
+          <option value="sale">Prodej</option>
+          <option value="donation">Darování</option>
+          <option value="theft">Krádež</option>
+          <option value="loss">Ztráta</option>
+          <option value="transfer">Přesun mimo firmu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poznámka</label>
+        <textarea class="form-ctrl" name="note"></textarea>
+      </div>
+      <div id="disposeResult" style="display:none;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button type="submit" class="btn btn-danger btn-full" id="disposeBtn">Vyřadit položku</button>
+        <button type="button" class="btn btn-ghost" onclick="startScanner()">Jiná položka</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+var scanner = null;
+
+function startScanner() {
+  document.getElementById('scannerPanel').style.display = '';
+  document.getElementById('itemPanel').style.display = 'none';
+  document.getElementById('scanError').style.display = 'none';
+
+  if (scanner) { scanner.stop().catch(function(){}); scanner = null; }
+
+  scanner = new Html5Qrcode('qr-reader');
+  scanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+    function(decoded) {
+      var match = decoded.match(/\/scan\/([^/?#]+)/);
+      var code = match ? decodeURIComponent(match[1]) : decoded.trim();
+      scanner.stop().catch(function(){});
+      scanner = null;
+      loadItem(code);
+    },
+    function() {}
+  ).catch(function() {
+    var el = document.getElementById('qr-reader');
+    if (el) el.innerHTML = '<p class="scan-hint">Kamera není dostupná.</p>';
+  });
+}
+
+async function loadItem(code) {
+  if (!code) return;
+  var errEl = document.getElementById('scanError');
+  errEl.style.display = 'none';
+  try {
+    var res = await fetch('/api/items/by-code/' + encodeURIComponent(code));
+    if (!res.ok) {
+      errEl.textContent = 'Položka „' + code + '" nebyla nalezena nebo je již vyřazena.';
+      errEl.style.display = '';
+      return;
+    }
+    var item = await res.json();
+    if (!item.is_active) {
+      errEl.textContent = 'Položka „' + item.name + '" je již vyřazena.';
+      errEl.style.display = '';
+      return;
+    }
+    document.getElementById('itemName').textContent = item.name;
+    document.getElementById('itemCode').textContent = item.code;
+    document.getElementById('disposeItemId').value = item.id;
+    document.getElementById('disposeResult').style.display = 'none';
+    document.getElementById('disposeForm').reset();
+    document.getElementById('disposeItemId').value = item.id;
+    document.getElementById('scannerPanel').style.display = 'none';
+    document.getElementById('itemPanel').style.display = '';
+  } catch(e) {
+    errEl.textContent = 'Chyba komunikace se serverem.';
+    errEl.style.display = '';
+  }
+}
+
+document.getElementById('disposeForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var btn = document.getElementById('disposeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Ukládám…';
+  var fd = new FormData(this);
+  var payload = { reason: fd.get('reason') };
+  if (fd.get('note')) payload.note = fd.get('note');
+  var res = await fetch('/api/items/' + fd.get('item_id') + '/dispose', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  var resultEl = document.getElementById('disposeResult');
+  if (res.ok) {
+    resultEl.className = 'flash flash-success';
+    resultEl.textContent = 'Položka byla úspěšně vyřazena!';
+    resultEl.style.display = '';
+    btn.textContent = 'Vyřazeno';
+  } else {
+    btn.disabled = false;
+    btn.textContent = 'Vyřadit položku';
+    var err = await res.json();
+    resultEl.className = 'flash flash-danger';
+    resultEl.textContent = 'Chyba: ' + (err.detail || 'Neznámá chyba');
+    resultEl.style.display = '';
+  }
+});
+
+startScanner();
+</script>
+{% endblock %}

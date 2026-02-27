@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Skenovat QR — AssetTrack{% endblock %}
+{% block page_title %}Skenovat QR{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', path='js/html5-qrcode.min.js') }}"></script>
+<script src="{{ url_for('static', path='js/scan.js') }}"></script>
+{% endblock %}
+{% block content %}
+
+{% if active_audit %}
+<div class="flash flash-info" style="margin-bottom:12px">
+  Inventura: <strong>{{ active_audit.name }}</strong>
+  <a href="/inventury/{{ active_audit.id }}" style="margin-left:8px;font-size:11px;opacity:0.8">zobrazit →</a>
+</div>
+
+<div id="loc-banner" class="loc-banner" style="display:none">
+  <div class="loc-banner-icon">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+  </div>
+  <div class="loc-banner-text">
+    <div class="loc-banner-label">Aktuální místnost</div>
+    <div class="loc-banner-name" id="loc-name">—</div>
+  </div>
+  <button class="loc-banner-clear" onclick="clearLocation()" title="Zrušit">×</button>
+</div>
+
+<div id="loc-banner-empty" class="loc-banner loc-banner-empty">
+  <div class="loc-banner-icon">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="14" height="14"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+  </div>
+  <div class="loc-banner-text">
+    <div class="loc-banner-label">Místnost nenastavena</div>
+    <div style="font-size:11px;color:var(--t3)">Naskenuj QR kód místnosti</div>
+  </div>
+</div>
+{% endif %}
+
+<div class="scan-outer">
+  <div class="scan-viewfinder">
+    <div class="scan-bg-text">NAMIŘ KAMERU NA QR KÓD</div>
+    <div id="qr-reader"></div>
+    <div class="scan-frame" style="pointer-events:none">
+      <div class="sc tl"></div><div class="sc tr"></div>
+      <div class="sc bl"></div><div class="sc br"></div>
+      <div class="scan-sweep"></div>
+    </div>
+  </div>
+
+  {% if not active_audit %}
+  <p class="scan-hint">Kód se načte automaticky. Funguje pro položky i místnosti.</p>
+  {% endif %}
+
+  <div id="scan-result-area"></div>
+
+  <div class="manual-row" style="margin-top:12px">
+    <input class="manual-input" type="text" id="manualCode"
+           placeholder="{% if active_audit %}Zadat kód ručně — IT-0042{% else %}Nebo zadej kód ručně — IT-0042{% endif %}"
+           autocomplete="off" autocapitalize="characters">
+    <button class="btn btn-primary" id="manualBtn">
+      {% if active_audit %}Naskenovat{% else %}Hledat{% endif %}
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if active_audit %}
+/* ── AUDIT MODE ── */
+var AUDIT_ID = {{ active_audit.id }};
+var activeLocId = null;
+
+// Obnov aktivní místnost ze sessionStorage
+(function() {
+  try {
+    var stored = sessionStorage.getItem('at_active_loc');
+    if (stored) {
+      setActiveLocation(JSON.parse(stored));
+    } else {
+      showEmptyLoc();
+    }
+  } catch(e) { showEmptyLoc(); }
+})();
+
+function setActiveLocation(loc) {
+  activeLocId = loc.id;
+  sessionStorage.setItem('at_active_loc', JSON.stringify(loc));
+  document.getElementById('loc-banner').style.display = 'flex';
+  document.getElementById('loc-banner-empty').style.display = 'none';
+  document.getElementById('loc-name').textContent = loc.name + (loc.code ? '  ·  ' + loc.code : '');
+}
+
+function clearLocation() {
+  activeLocId = null;
+  sessionStorage.removeItem('at_active_loc');
+  document.getElementById('loc-banner').style.display = 'none';
+  document.getElementById('loc-banner-empty').style.display = 'flex';
+}
+
+function showEmptyLoc() {
+  document.getElementById('loc-banner').style.display = 'none';
+  document.getElementById('loc-banner-empty').style.display = 'flex';
+}
+
+async function handleScan(code) {
+  showResult('loading');
+  try {
+    var res = await fetch('/api/scan/resolve/' + encodeURIComponent(code));
+    var data = await res.json();
+
+    if (data.type === 'location') {
+      setActiveLocation({ id: data.id, name: data.name, code: data.code });
+      showResult('location', data);
+      return;
+    }
+
+    if (data.type === 'item') {
+      if (!data.is_active) { showResult('disposed', data); return; }
+      if (data.audit_status === 'scanned') { showResult('already', data); return; }
+
+      var body = { item_code: data.code };
+      if (activeLocId) body.location_id = activeLocId;
+
+      var scanRes = await fetch('/api/audits/' + AUDIT_ID + '/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (scanRes.ok) {
+        showResult('ok', data);
+      } else {
+        showResult('err', data, await scanRes.json());
+      }
+      return;
+    }
+
+    showResult('unknown', { code: code });
+  } catch(e) {
+    showResult('err', {}, { detail: 'Chyba připojení' });
+  }
+}
+
+function showResult(type, data, errData) {
+  var el = document.getElementById('scan-result-area');
+  data = data || {};
+  var name  = data.name ? '<div class="sri-name">' + data.name + '</div>' : '';
+  var badge = data.code ? '<span class="id-badge">' + data.code + '</span>' : '';
+  var loc   = data.current_location_name ? '<span class="sri-loc">' + data.current_location_name + '</span>' : '';
+  var inner = {
+    loading:  '<div class="sri-status">Hledám…</div>',
+    ok:       '<div class="sri-status">Naskenováno ✓</div>' + name + '<div class="sri-code">' + badge + loc + '</div>',
+    already:  '<div class="sri-status">Již v inventuře</div>' + name + '<div class="sri-code">' + badge + loc + '</div>',
+    location: '<div class="sri-status">Místnost nastavena</div>' + name + '<div class="sri-code">' + badge + '</div>',
+    disposed: '<div class="sri-status">Položka vyřazena</div>' + name + '<div class="sri-code">' + badge + '</div>',
+    err:      '<div class="sri-status">Chyba</div><div class="sri-name">' + ((errData && errData.detail) || 'Neznámá chyba') + '</div>',
+    unknown:  '<div class="sri-status">Kód nenalezen</div><div class="sri-code">' + badge + '</div>',
+  };
+  el.innerHTML = '<div class="scan-result-inline ' + type + '">' + (inner[type] || '') + '</div>';
+}
+
+document.getElementById('manualBtn').addEventListener('click', function() {
+  var code = document.getElementById('manualCode').value.trim();
+  if (code) { handleScan(code); document.getElementById('manualCode').value = ''; }
+});
+document.getElementById('manualCode').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    var code = this.value.trim();
+    if (code) { handleScan(code); this.value = ''; }
+  }
+});
+
+initScanner(function(code) { handleScan(code); });
+
+{% else %}
+/* ── STANDARDNÍ MODE ── */
+document.getElementById('manualBtn').addEventListener('click', function() {
+  var code = document.getElementById('manualCode').value.trim();
+  if (code) window.location = '/scan/' + encodeURIComponent(code);
+});
+document.getElementById('manualCode').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    var code = this.value.trim();
+    if (code) window.location = '/scan/' + encodeURIComponent(code);
+  }
+});
+
+initScanner('/scan/__CODE__');
+{% endif %}
+</script>
+{% endblock %}

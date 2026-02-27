@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AssetTrack{% endblock %}</title>
+  <!-- Anti-flash: set theme before CSS loads -->
+  <script>(function(){var t=localStorage.getItem('at_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/app.css') }}?v=7">
+  <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+{% set path = request.url.path %}
+<div class="shell">
+
+  <!-- Sidebar (desktop) -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"></div>
+      <span class="logo-text"><span class="logo-a">Asset</span><span class="logo-b">Track</span></span>
+      <span class="logo-version">v1.4</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-group-label">Přehled</span>
+        <a href="/" class="nav-link {% if path == '/' %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Správa majetku</span>
+        <a href="/majetek" class="nav-link {% if path.startswith('/majetek') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Majetek
+        </a>
+        <a href="/lokace" class="nav-link {% if path.startswith('/lokace') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+          Lokace
+        </a>
+        <a href="/inventury" class="nav-link {% if path.startswith('/inventury') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Inventury
+        </a>
+      </div>
+      <div class="nav-group">
+        <span class="nav-group-label">Nástroje</span>
+        <a href="/sken" class="nav-link {% if path.startswith('/sken') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10"/></svg>
+          Skenovat QR
+        </a>
+        <a href="/tisk" class="nav-link {% if path == '/tisk' %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Tisk štítků
+        </a>
+        {% if request.session.get('role') in ['spravce', 'admin'] %}
+        <a href="/import" class="nav-link {% if path.startswith('/import') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import
+        </a>
+        {% endif %}
+        <a href="/vyrazeni" class="nav-link {% if path.startswith('/vyrazeni') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Vyřazení
+        </a>
+        {% if request.session.get('role') == 'admin' %}
+        <a href="/admin/uzivatele" class="nav-link {% if path.startswith('/admin') %}active{% endif %}">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Uživatelé
+        </a>
+        {% endif %}
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Přepnout motiv">
+        <svg class="ti-sun" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="ti-moon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span class="tl-light">Světlý motiv</span>
+        <span class="tl-dark">Tmavý motiv</span>
+      </button>
+      <div class="user-row">
+        <div class="user-avatar">{{ (request.session.get('username') or 'AT')[:2]|upper }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ request.session.get('username') or 'Uživatel' }}</div>
+          <div class="user-role">{{ request.session.get('role') or 'user' }}</div>
+        </div>
+        <a href="/logout" title="Odhlásit se" style="color:var(--t3);padding:4px;margin-left:auto;display:flex;align-items:center" onclick="return confirm('Opravdu se chcete odhlásit?')">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Topbar (desktop) -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb">
+          <span>AssetTrack</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">{% block page_title %}{% endblock %}</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a href="/sken" class="btn btn-ghost">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10"/></svg>
+          Skenovat
+        </a>
+        {% if request.session.get('role') in ['spravce', 'admin'] %}
+        <a href="/majetek/novy" class="btn btn-primary">+ Přidat položku</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Topbar (mobile) -->
+    <div class="mobile-topbar">
+      <div class="mobile-logo">
+        <div class="logo-mark"></div>
+        <span><span class="logo-a">Asset</span><span class="logo-b">Track</span></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="theme-toggle-mob" onclick="toggleTheme()" title="Přepnout motiv">
+          <svg class="ti-sun" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="ti-moon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a href="/sken" class="btn btn-primary" style="height:28px;font-size:11px;padding:0 10px">Skenovat</a>
+        {% if request.session.get('username') %}
+        <div class="mob-user">
+          <div class="mob-user-avatar" title="{{ request.session.get('username') }} ({{ request.session.get('role') or 'user' }})">{{ (request.session.get('username') or 'AT')[:2]|upper }}</div>
+          <a href="/logout" class="mob-logout-btn" title="Odhlásit se" onclick="return confirm('Opravdu se chcete odhlásit?')">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <main class="main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% include 'partials/flash.html' %}{% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- /content -->
+</div><!-- /shell -->
+
+<!-- Mobile nav -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <a href="/" class="mobile-nav-item {% if path == '/' %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Přehled
+    </a>
+    <a href="/majetek" class="mobile-nav-item {% if path.startswith('/majetek') %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Majetek
+    </a>
+    <a href="/sken" class="mobile-scan-btn">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10"/></svg>
+    </a>
+    <a href="/inventury" class="mobile-nav-item {% if path.startswith('/inventury') %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Inventury
+    </a>
+    <a href="/lokace" class="mobile-nav-item {% if path.startswith('/lokace') %}active{% endif %}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Lokace
+    </a>
+  </div>
+</nav>
+
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('at_theme', next);
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

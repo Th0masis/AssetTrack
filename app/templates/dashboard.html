@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AssetTrack{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="stat-row">
+  <div class="stat-cell accent">
+    <div class="stat-num">{{ total_items }}</div>
+    <div class="stat-label">Aktivních položek</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">{{ total_locations }}</div>
+    <div class="stat-label">Lokací</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">{{ moves_this_month }}</div>
+    <div class="stat-label">Přesunů tento měsíc</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">{{ open_audits }}</div>
+    <div class="stat-label">Aktivních inventur</div>
+  </div>
+</div>
+
+{% if active_audit %}
+<div class="sh"><span class="sh-title">Aktivní inventura</span></div>
+{% with audit=active_audit %}
+{% include 'partials/audit_progress.html' %}
+{% endwith %}
+{% endif %}
+
+<div class="sh">
+  <span class="sh-title">Poslední aktivity</span>
+  <a href="/majetek" class="sh-action">Zobrazit majetek</a>
+</div>
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Položka</th>
+        <th>Akce</th>
+        <th style="text-align:right">Datum</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in recent_activity %}
+      <tr onclick="window.location='/majetek/{{ event.item_id }}'">
+        <td>
+          <div style="font-weight:500;color:var(--t1)">{{ event.item_name }}</div>
+          {% if event.item_code %}<span class="id-badge" style="margin-top:3px;display:inline-block">{{ event.item_code }}</span>{% endif %}
+        </td>
+        <td class="sec">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span class="pill pill-{{ event.pill_type }}">{{ event.type_label }}</span>
+            {% if event.detail %}<span>{{ event.detail }}</span>{% endif %}
+          </div>
+        </td>
+        <td class="dim" style="text-align:right;white-space:nowrap">{{ event.created_at.strftime("%d.%m. %H:%M") }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="padding:32px;text-align:center;color:var(--t3)">Žádné aktivity</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

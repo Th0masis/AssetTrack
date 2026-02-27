@@ -1,0 +1,27 @@
+{% if audit %}
+<div class="audit-card"
+     hx-get="/inventury/{{ audit.id }}/progress"
+     hx-trigger="every 3s"
+     hx-target="this"
+     hx-swap="outerHTML">
+  <div class="audit-card-head">
+    <div>
+      <div class="audit-card-name">{{ audit.name }}</div>
+      <div class="audit-card-meta">Zahájena {{ audit.started_at.strftime('%d.%m.%Y') }}</div>
+    </div>
+    <span class="badge badge-active">Probíhá</span>
+  </div>
+  <div class="audit-card-body">
+    {% set pct = ((report.scanned_count / report.total_items * 100)|int) if report and report.total_items > 0 else 0 %}
+    <div class="progress-wrap">
+      <div class="progress-fill" style="width:{{ pct }}%"></div>
+    </div>
+    <div class="progress-row">
+      <span><strong>{{ report.scanned_count if report else 0 }}</strong> naskenováno</span>
+      <span>{{ pct }} %</span>
+      <span><strong>{{ (report.total_items - report.scanned_count) if report else 0 }}</strong> zbývá</span>
+    </div>
+    <a href="/sken" class="btn btn-primary btn-full">Pokračovat ve skenování</a>
+  </div>
+</div>
+{% endif %}

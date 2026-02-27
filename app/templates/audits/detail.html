@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}{{ audit.name }} — AssetTrack{% endblock %}
+{% block page_title %}{{ audit.name }}{% endblock %}
+{% block head %}
+{% if audit.status == 'open' %}
+<script src="{{ url_for('static', path='js/html5-qrcode.min.js') }}"></script>
+{% endif %}
+{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <a href="/inventury" class="btn btn-ghost">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Zpět na inventury
+  </a>
+</div>
+
+<div class="detail-head">
+  <div class="detail-name">{{ audit.name }}</div>
+  <div class="detail-meta-row">
+    <span class="badge {% if audit.status == 'open' %}badge-active{% else %}badge-done{% endif %}">
+      {% if audit.status == 'open' %}Probíhá{% else %}Uzavřena{% endif %}
+    </span>
+    <span style="font-size:12px;color:var(--t3)">Zahájeno {{ audit.started_at.strftime('%d.%m.%Y') }}</span>
+  </div>
+  <div class="detail-actions">
+    {% if audit.status == 'open' %}
+    <button class="btn btn-danger desktop-only" onclick="closeAudit()">Uzavřít inventuru</button>
+    {% endif %}
+    <a href="/api/export/pdf/{{ audit.id }}" class="btn btn-ghost" target="_blank">Export PDF</a>
+  </div>
+</div>
+
+<div class="stat-row" style="margin-bottom:16px">
+  <div class="stat-cell accent">
+    <div class="stat-num">{{ report.scanned_count }}</div>
+    <div class="stat-label">Naskenováno</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">{{ report.total_items }}</div>
+    <div class="stat-label">Celkem položek</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num" style="color:var(--red)">{{ report.missing_count }}</div>
+    <div class="stat-label">Chybějící</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num">{{ ((report.scanned_count / report.total_items * 100)|int if report.total_items > 0 else 0) }}%</div>
+    <div class="stat-label">Pokrytí</div>
+  </div>
+</div>
+
+{% if audit.status == 'open' %}
+<div class="sh"><span class="sh-title">Skenovat položku</span></div>
+<div class="audit-card">
+  <div class="audit-card-body">
+    <div id="qrPanel" style="display:none;margin-bottom:12px">
+      <div class="scan-viewfinder" style="max-width:300px;margin:0 auto 12px">
+        <div class="scan-bg-text">NAMIŘ KAMERU NA QR KÓD</div>
+        <div id="qr-reader"></div>
+        <div class="scan-frame" style="pointer-events:none">
+          <div class="sc tl"></div><div class="sc tr"></div>
+          <div class="sc bl"></div><div class="sc br"></div>
+          <div class="scan-sweep"></div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick="closeCamera()">Zavřít kameru</button>
+    </div>
+
+    <form id="scanForm" class="manual-row" style="margin-bottom:10px">
+      <input class="manual-input" type="text" id="scanItemCode"
+             placeholder="Kód položky — ASSET-001" autocomplete="off" autocapitalize="characters">
+      <button type="submit" class="btn btn-primary">Naskenovat</button>
+      <button type="button" class="btn btn-ghost" onclick="openCamera()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Kamera
+      </button>
+    </form>
+    <div id="scanResult"></div>
+  </div>
+</div>
+{% endif %}
+
+{% if report.missing_items %}
+<div class="sh"><span class="sh-title">Nenaskenované položky</span></div>
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead><tr><th>Název</th><th>Kód</th></tr></thead>
+    <tbody>
+      {% for item in report.missing_items %}
+      <tr onclick="window.location='/majetek/{{ item.id }}'">
+        <td>{{ item.name }}</td>
+        <td><span class="id-badge">{{ item.code }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+{% if audit.status == 'open' %}
+var qrScanner = null;
+
+document.getElementById('scanForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var code = document.getElementById('scanItemCode').value.trim();
+  if (!code) return;
+  await doScan(code);
+  document.getElementById('scanItemCode').value = '';
+  document.getElementById('scanItemCode').focus();
+});
+
+async function doScan(item_code) {
+  var el = document.getElementById('scanResult');
+  el.innerHTML = '<div class="flash flash-info">Probíhá skenování…</div>';
+  var res = await fetch('/api/audits/{{ audit.id }}/scan', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({item_code: item_code})
+  });
+  if (res.ok) {
+    el.innerHTML = '<div class="flash flash-success">Naskenováno: <strong>' + item_code + '</strong></div>';
+    setTimeout(function() { window.location.reload(); }, 1500);
+  } else {
+    var err = await res.json();
+    el.innerHTML = '<div class="flash flash-danger">' + (err.detail || 'Chyba skenování') + '</div>';
+  }
+}
+
+function openCamera() {
+  var result = document.getElementById('scanResult');
+  if (!window.isSecureContext) {
+    result.innerHTML = '<div class="flash flash-danger">Kamera vyžaduje HTTPS připojení.</div>';
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    result.innerHTML = '<div class="flash flash-danger">Kamera není v tomto prohlížeči podporována.</div>';
+    return;
+  }
+  document.getElementById('qrPanel').style.display = '';
+  if (qrScanner) { qrScanner.stop().catch(function(){}); }
+  qrScanner = new Html5Qrcode('qr-reader');
+  qrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+    function(decoded) {
+      var match = decoded.match(/\/scan\/([^/?#]+)/);
+      var code = match ? decodeURIComponent(match[1]) : decoded.trim();
+      document.getElementById('scanItemCode').value = code;
+      closeCamera();
+      doScan(code);
+    },
+    function() {}
+  ).catch(function(err) {
+    document.getElementById('qrPanel').style.display = 'none';
+    var msg = 'Kamera není dostupná.';
+    if (err && (err.toString().includes('NotAllowed') || err.toString().includes('Permission'))) {
+      msg = 'Přístup ke kameře byl zamítnut. Povol přístup v nastavení prohlížeče.';
+    } else if (err && err.toString().includes('NotFound')) {
+      msg = 'Kamera nenalezena.';
+    }
+    result.innerHTML = '<div class="flash flash-danger">' + msg + '</div>';
+  });
+}
+
+function closeCamera() {
+  if (qrScanner) {
+    qrScanner.stop().catch(function(){});
+    qrScanner = null;
+  }
+  document.getElementById('qrPanel').style.display = 'none';
+}
+
+async function closeAudit() {
+  if (!confirm('Opravdu uzavřít inventuru? Tuto akci nelze vrátit.')) return;
+  var res = await fetch('/api/audits/{{ audit.id }}/close', {method: 'POST'});
+  if (res.ok) window.location.reload();
+  else { var err = await res.json(); alert(err.detail); }
+}
+{% endif %}
+</script>
+{% endblock %}

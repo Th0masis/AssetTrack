@@ -1,0 +1,28 @@
+{% for item in items %}
+<tr onclick="window.location='/majetek/{{ item.id }}'">
+  <td>{{ item.name }}</td>
+  <td><span class="id-badge">{{ item.code }}</span></td>
+  <td class="sec">{{ item.current_location or '—' }}</td>
+  <td class="sec">{{ item.category or '—' }}</td>
+  <td class="dim">{{ item.purchase_date.strftime('%m/%Y') if item.purchase_date else '—' }}</td>
+  <td onclick="event.stopPropagation()">
+    {% if request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn-icon" title="Upravit"
+      onclick="openEditItem(this)"
+      data-id="{{ item.id }}"
+      data-name="{{ item.name | e }}"
+      data-code="{{ item.code | e }}"
+      data-category="{{ item.category or '' | e }}"
+      data-serial="{{ item.serial_number or '' | e }}"
+      data-date="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}"
+      data-price="{{ item.purchase_price or '' }}"
+      data-description="{{ item.description or '' | e }}"
+      data-responsible="{{ item.responsible_person or '' | e }}">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </button>
+    {% endif %}
+  </td>
+</tr>
+{% else %}
+<tr><td colspan="6" style="color:var(--t3);text-align:center;padding:24px">Žádné položky</td></tr>
+{% endfor %}

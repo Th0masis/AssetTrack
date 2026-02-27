@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Majetek — AssetTrack{% endblock %}
+{% block page_title %}Majetek{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Majetek</span>
+  {% if request.session.get('role') in ['spravce', 'admin'] %}
+  <a href="/majetek/novy" class="sh-action desktop-only">+ Přidat položku</a>
+  {% endif %}
+</div>
+
+<div class="search-row">
+  <input class="search-input" type="text" name="search" value="{{ search }}"
+    placeholder="Hledat název, kód, sériové číslo…"
+    hx-get="/majetek/search"
+    hx-target="#item-tbody"
+    hx-trigger="keyup changed delay:300ms"
+    hx-include="[name='category']">
+  <select class="filter-select" name="category"
+    hx-get="/majetek/search"
+    hx-target="#item-tbody"
+    hx-trigger="change"
+    hx-include="[name='search']">
+    <option value="">Vše kategorie</option>
+    {% for cat in categories %}
+      <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Název</th>
+        <th>Kód</th>
+        <th>Lokace</th>
+        <th>Kategorie</th>
+        <th>Pořízeno</th>
+        <th style="width:36px"></th>
+      </tr>
+    </thead>
+    <tbody id="item-tbody">
+      {% include 'partials/item_row.html' %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_data.pages > 1 %}
+<div class="pager">
+  {% for p in range(1, page_data.pages + 1) %}
+  <a class="pager-btn {% if p == page_data.page %}active{% endif %}"
+     href="?page={{ p }}&search={{ search }}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ p }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Modal: Upravit položku -->
+<div class="overlay" id="edit-item-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Upravit položku</div>
+    <form id="editItemForm">
+      <input type="hidden" id="editItemId">
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" id="editItemName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" id="editItemCode" required style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <input class="form-ctrl" type="text" id="editItemCategory">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sériové číslo</label>
+        <input class="form-ctrl" type="text" id="editItemSerial" style="font-family:var(--fm)">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Datum nákupu</label>
+          <input class="form-ctrl" type="date" id="editItemDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cena (Kč)</label>
+          <input class="form-ctrl" type="number" step="0.01" min="0" id="editItemPrice">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zodpovědná osoba</label>
+        <input class="form-ctrl" type="text" id="editItemResponsible">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Popis</label>
+        <textarea class="form-ctrl" id="editItemDescription"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('edit-item-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Přidat položku -->
+<div class="overlay" id="add-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Přidat položku</div>
+    <form id="addItemForm">
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" name="code" required style="font-family:var(--fm)" autocapitalize="characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" name="name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <input class="form-ctrl" type="text" name="category">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sériové číslo</label>
+        <input class="form-ctrl" type="text" name="serial_number" style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lokace</label>
+        <select class="form-ctrl" name="location_id">
+          <option value="">Bez lokace</option>
+          {% for loc in locations %}
+          <option value="{{ loc.id }}">{{ loc.name }}{% if loc.code %} · {{ loc.code }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zodpovědná osoba</label>
+        <input class="form-ctrl" type="text" name="responsible_person">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Popis</label>
+        <textarea class="form-ctrl" name="description" rows="2"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Datum nákupu</label>
+          <input class="form-ctrl" type="date" name="purchase_date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cena (Kč)</label>
+          <input class="form-ctrl" type="number" name="purchase_price" min="0" step="0.01">
+        </div>
+      </div>
+      <div id="addItemError" class="flash flash-danger" style="display:none;margin-bottom:8px"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('add-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary" id="addItemBtn">Přidat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditItem(btn) {
+  var d = btn.dataset;
+  document.getElementById('editItemId').value = d.id;
+  document.getElementById('editItemName').value = d.name;
+  document.getElementById('editItemCode').value = d.code;
+  document.getElementById('editItemCategory').value = d.category;
+  document.getElementById('editItemSerial').value = d.serial;
+  document.getElementById('editItemDate').value = d.date;
+  document.getElementById('editItemPrice').value = d.price;
+  document.getElementById('editItemDescription').value = d.description;
+  document.getElementById('editItemResponsible').value = d.responsible || '';
+  document.getElementById('edit-item-modal').classList.add('open');
+}
+
+document.getElementById('editItemForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var id = document.getElementById('editItemId').value;
+  var price = document.getElementById('editItemPrice').value;
+  var payload = {
+    name: document.getElementById('editItemName').value,
+    code: document.getElementById('editItemCode').value,
+    category: document.getElementById('editItemCategory').value || null,
+    serial_number: document.getElementById('editItemSerial').value || null,
+    purchase_date: document.getElementById('editItemDate').value || null,
+    purchase_price: price ? parseFloat(price) : null,
+    description: document.getElementById('editItemDescription').value || null,
+    responsible_person: document.getElementById('editItemResponsible').value || null,
+  };
+  var res = await fetch('/api/items/' + id, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { var err = await res.json(); alert(err.detail || 'Chyba při ukládání'); }
+});
+
+document.querySelector('.sh-action').addEventListener('click', function(e) {
+  if (this.href && this.href.includes('/novy')) {
+    e.preventDefault();
+    document.getElementById('add-modal').classList.add('open');
+  }
+});
+
+document.getElementById('addItemForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var btn = document.getElementById('addItemBtn');
+  var errEl = document.getElementById('addItemError');
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  var fd = new FormData(this);
+  var locationId = fd.get('location_id');
+  var payload = {
+    code: fd.get('code'),
+    name: fd.get('name'),
+  };
+  if (fd.get('category')) payload.category = fd.get('category');
+  if (fd.get('serial_number')) payload.serial_number = fd.get('serial_number');
+  if (fd.get('description')) payload.description = fd.get('description');
+  if (fd.get('purchase_date')) payload.purchase_date = fd.get('purchase_date');
+  if (fd.get('purchase_price')) payload.purchase_price = parseFloat(fd.get('purchase_price'));
+  if (fd.get('responsible_person')) payload.responsible_person = fd.get('responsible_person');
+
+  var res = await fetch('/api/items', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    var err = await res.json();
+    errEl.textContent = err.detail || 'Chyba při vytváření položky';
+    errEl.style.display = '';
+    btn.disabled = false;
+    return;
+  }
+  var item = await res.json();
+
+  if (locationId) {
+    await fetch('/api/moves', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ item_id: item.id, location_id: parseInt(locationId) })
+    });
+  }
+
+  window.location.reload();
+});
+</script>
+{% endblock %}

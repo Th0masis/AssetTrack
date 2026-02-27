@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Import majetku — AssetTrack{% endblock %}
+{% block page_title %}Import ze souboru Excel{% endblock %}
+{% block head %}
+<style>
+.dropzone-area {
+  border: 2px dashed var(--line2);
+  border-radius: 2px;
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--bg3);
+  margin-bottom: 16px;
+}
+.dropzone-area:hover, .dropzone-area.drag-over {
+  border-color: var(--orange);
+  background: var(--orange-sub);
+}
+.dropzone-area .drop-label { font-size:13px; color:var(--t2); margin-bottom:4px; font-weight:500; }
+.dropzone-area .drop-hint  { font-size:11px; color:var(--t3); }
+.dropzone-area .drop-ok    { font-size:13px; color:var(--green); font-weight:500; }
+.import-cols td:first-child { width:130px; font-size:11px; color:var(--t2); font-weight:500; white-space:nowrap; padding:7px 14px; }
+.import-cols td:last-child  { font-size:12px; color:var(--t3); padding:7px 14px; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Import ze souboru Excel</span>
+  <a href="/api/import/template" class="sh-action" download>Stáhnout šablonu (.xlsx)</a>
+</div>
+
+{% if result and not result.success and result.error %}
+<div class="flash flash-danger" style="margin-bottom:16px">
+  <strong>Chyba při importu:</strong> {{ result.error }}
+</div>
+{% endif %}
+
+<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
+
+  <!-- Levý sloupec -->
+  <div style="flex:2;min-width:300px">
+    <div class="info-grid" style="margin-bottom:16px">
+      <form action="/import" method="post" enctype="multipart/form-data" id="import-form">
+        <div class="info-row" style="flex-direction:column;align-items:stretch">
+          <div id="dropzone" class="dropzone-area" role="button" tabindex="0">
+            <input type="file" name="file" id="file-input" accept=".xlsx,.xlsm" style="display:none">
+            <div id="drop-content">
+              <div class="drop-label">Přetáhněte soubor sem nebo klikněte pro výběr</div>
+              <div class="drop-hint">Přijímá: .xlsx, .xlsm · Max. 10 MB</div>
+            </div>
+            <div id="drop-selected" style="display:none">
+              <div class="drop-ok" id="file-name">—</div>
+              <div class="drop-hint" id="file-size"></div>
+            </div>
+          </div>
+          <div style="padding:0 16px 14px">
+            <button type="submit" class="btn btn-primary btn-full" id="submit-btn" disabled>Importovat položky</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    {% if result and result.success %}
+    <div class="sh"><span class="sh-title">Výsledky importu</span></div>
+    <div class="stat-row" style="margin-bottom:16px;grid-template-columns:repeat(3,1fr)">
+      <div class="stat-cell accent">
+        <div class="stat-num" style="font-size:20px">{{ result.imported }}</div>
+        <div class="stat-label">Importováno</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num" style="font-size:20px;color:var(--yellow)">{{ result.skipped }}</div>
+        <div class="stat-label">Přeskočeno</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-num" style="font-size:20px;color:var(--red)">{{ result.errors }}</div>
+        <div class="stat-label">Chyby</div>
+      </div>
+    </div>
+
+    {% if result.details %}
+    <div class="tbl-wrap" style="max-height:360px;overflow-y:auto">
+      <table class="tbl">
+        <thead><tr><th>Stav</th><th>Kód</th><th>Název</th><th>Poznámka</th></tr></thead>
+        <tbody>
+          {% for d in result.details %}
+          <tr>
+            <td>
+              {% if d.status == 'imported' %}<span class="badge badge-done">Importováno</span>
+              {% elif d.status == 'skipped' %}<span class="badge badge-warn">Přeskočeno</span>
+              {% else %}<span class="badge badge-dead">Chyba</span>{% endif %}
+            </td>
+            <td><span class="id-badge">{{ d.code or '—' }}</span></td>
+            <td>{{ d.name or '—' }}</td>
+            <td class="sec" style="font-size:11px">{{ d.reason or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    {% if result.imported > 0 %}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <a href="/majetek" class="btn btn-primary">Zobrazit majetek</a>
+      <a href="/import" class="btn btn-ghost">Importovat znovu</a>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- Pravý sloupec: návod -->
+  <div style="flex:1;min-width:280px;max-width:420px">
+    <div class="sh" style="margin-top:0"><span class="sh-title">Jak na to</span></div>
+    <div class="info-grid" style="margin-bottom:16px">
+      <div class="info-row"><div class="info-key">Krok 1</div><div class="info-val" style="font-size:12px">Stáhněte šablonu Excel</div></div>
+      <div class="info-row"><div class="info-key">Krok 2</div><div class="info-val" style="font-size:12px">Vyplňte list „Import majetku"</div></div>
+      <div class="info-row"><div class="info-key">Krok 3</div><div class="info-val" style="font-size:12px">Smažte ukázkové (modré) řádky</div></div>
+      <div class="info-row"><div class="info-key">Krok 4</div><div class="info-val" style="font-size:12px">Nahrajte soubor a importujte</div></div>
+    </div>
+
+    <div class="sh"><span class="sh-title">Sloupce šablony</span></div>
+    <div class="tbl-wrap" style="margin-bottom:16px">
+      <table class="tbl import-cols">
+        <tbody>
+          <tr><td>Kód</td><td>Volitelný. Prázdný = auto (IT-NNNNN)</td></tr>
+          <tr><td>Název *</td><td>Povinný</td></tr>
+          <tr><td>Kategorie</td><td>Volitelná</td></tr>
+          <tr><td>Sériové číslo</td><td>Volitelné</td></tr>
+          <tr><td>Datum nákupu</td><td>DD.MM.RRRR</td></tr>
+          <tr><td>Cena pořízení</td><td>Číslo v Kč</td></tr>
+          <tr><td>Kód lokace</td><td>Kód existující lokace</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% if locations %}
+    <div class="sh"><span class="sh-title">Existující lokace</span></div>
+    <div class="tbl-wrap" style="max-height:200px;overflow-y:auto">
+      <table class="tbl">
+        <thead><tr><th>Kód</th><th>Název</th></tr></thead>
+        <tbody>
+          {% for loc in locations %}
+          <tr><td><span class="id-badge">{{ loc.code }}</span></td><td class="sec">{{ loc.name }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var dropzone   = document.getElementById('dropzone');
+  var fileInput  = document.getElementById('file-input');
+  var submitBtn  = document.getElementById('submit-btn');
+  var fileNameEl = document.getElementById('file-name');
+  var fileSizeEl = document.getElementById('file-size');
+  var dropContent  = document.getElementById('drop-content');
+  var dropSelected = document.getElementById('drop-selected');
+
+  function formatSize(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return Math.round(b/1024) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  function onFile(file) {
+    if (!file) return;
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = formatSize(file.size);
+    dropContent.style.display = 'none';
+    dropSelected.style.display = '';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Importovat: ' + file.name;
+  }
+
+  fileInput.addEventListener('change', function() { onFile(fileInput.files[0]); });
+  dropzone.addEventListener('click', function() { fileInput.click(); });
+  dropzone.addEventListener('keydown', function(e) { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); fileInput.click(); } });
+  dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('drag-over'); });
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    var f = e.dataTransfer.files[0];
+    if (f) { var dt = new DataTransfer(); dt.items.add(f); fileInput.files = dt.files; onFile(f); }
+  });
+
+  document.getElementById('import-form').addEventListener('submit', function() {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Zpracovávám…';
+  });
+
+  var resultsCard = document.getElementById('results-card');
+  if (resultsCard) { setTimeout(function() { resultsCard.scrollIntoView({behavior:'smooth'}); }, 100); }
+}());
+</script>
+{% endblock %}

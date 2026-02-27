@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}{{ location.name }} — AssetTrack{% endblock %}
+{% block page_title %}{{ location.name }}{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <a href="/lokace" class="btn btn-ghost">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Zpět na lokace
+  </a>
+</div>
+
+<div class="detail-head">
+  <div class="detail-name">{{ location.name }}</div>
+  <div class="detail-meta-row">
+    <span class="id-badge lg">{{ location.code }}</span>
+    {% if location.building %}<span style="font-size:12px;color:var(--t3)">{{ location.building }}{% if location.floor %} · patro {{ location.floor }}{% endif %}</span>{% endif %}
+    <span class="badge {% if location.is_active %}badge-done{% else %}badge-dead{% endif %}">
+      {% if location.is_active %}Aktivní{% else %}Neaktivní{% endif %}
+    </span>
+  </div>
+  <div class="detail-actions">
+    {% if request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn btn-ghost desktop-only" onclick="document.getElementById('edit-modal').classList.add('open')">Upravit</button>
+    {% endif %}
+    <a href="/api/qr/location/{{ location.id }}" class="btn btn-ghost" target="_blank">Tisknout QR</a>
+    {% if request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn btn-danger desktop-only" onclick="document.getElementById('deactivate-modal').classList.add('open')">Deaktivovat</button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal: Upravit lokaci -->
+<div class="overlay" id="edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Upravit lokaci</div>
+    <form id="editForm">
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" name="name" value="{{ location.name }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" name="code" value="{{ location.code }}" required style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Budova</label>
+        <input class="form-ctrl" type="text" name="building" value="{{ location.building or '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Patro</label>
+        <input class="form-ctrl" type="text" name="floor" value="{{ location.floor or '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Popis</label>
+        <textarea class="form-ctrl" name="description">{{ location.description or '' }}</textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('edit-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Deaktivovat lokaci -->
+<div class="overlay" id="deactivate-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Deaktivovat lokaci</div>
+    <p style="font-size:13px;color:var(--t2);margin:0 0 8px">
+      Lokace <strong>{{ location.name }}</strong> bude označena jako neaktivní a zmizí ze seznamu lokací.
+    </p>
+    {% if items %}
+    <div class="flash flash-warn" style="margin-bottom:12px;font-size:12px">
+      Na této lokaci je aktuálně <strong>{{ items|length }}</strong> položek. Po deaktivaci se nezobrazí v žádné lokaci.
+    </div>
+    {% endif %}
+    <form method="post" action="/lokace/{{ location.id }}/deactivate">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('deactivate-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-danger">Potvrdit deaktivaci</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="sh"><span class="sh-title">Informace</span></div>
+<div class="info-grid">
+  <div class="info-row">
+    <div class="info-key">Kód</div>
+    <div class="info-val mono">{{ location.code }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Budova</div>
+    <div class="info-val {% if not location.building %}empty{% endif %}">{{ location.building or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Patro</div>
+    <div class="info-val {% if not location.floor %}empty{% endif %}">{{ location.floor or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Popis</div>
+    <div class="info-val {% if not location.description %}empty{% endif %}">{{ location.description or 'Nezadáno' }}</div>
+  </div>
+</div>
+
+<div class="sh"><span class="sh-title">Položky na této lokaci</span></div>
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr><th>Název</th><th>Kód</th><th>Kategorie</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr onclick="window.location='/majetek/{{ item.id }}'">
+        <td>{{ item.name }}</td>
+        <td><span class="id-badge">{{ item.code }}</span></td>
+        <td class="sec">{{ item.category or '—' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--t3);text-align:center;padding:24px">Na této lokaci nejsou žádné položky</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('editForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const payload = {};
+  for (const [k, v] of fd.entries()) payload[k] = v || null;
+  const res = await fetch('/api/locations/{{ location.id }}', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { const err = await res.json(); alert(err.detail || 'Chyba při ukládání'); }
+});
+</script>
+{% endblock %}

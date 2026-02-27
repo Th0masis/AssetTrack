@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Přihlášení — AssetTrack</title>
+  <script>(function(){var t=localStorage.getItem('at_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="/static/css/app.css?v=5">
+</head>
+<body class="login-body">
+
+<!-- Theme toggle — fixed top right -->
+<button class="login-theme-btn" onclick="toggleTheme()" title="Přepnout motiv">
+  <svg class="ti-sun" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="ti-moon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<div class="login-wrap">
+
+  <!-- Logo nad kartou -->
+  <div class="login-header">
+    <div class="login-logo">
+      <div class="login-logo-mark"></div>
+      <span class="logo-text"><span class="logo-a">Asset</span><span class="logo-b">Track</span></span>
+      <span class="logo-version">v1.4</span>
+    </div>
+    <div class="login-tagline">Interní inventarizační systém</div>
+  </div>
+
+  <!-- Karta s formulářem -->
+  <div class="login-card">
+    {% if error %}
+    <div class="flash flash-danger" style="margin-bottom:14px">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" class="login-form">
+      <input type="hidden" name="next" value="{{ request.query_params.get('next', '/') }}">
+      <div class="form-group">
+        <label class="form-label">Uživatelské jméno</label>
+        <input class="form-ctrl" type="text" name="username"
+               value="{{ username or '' }}"
+               autocomplete="username" autofocus required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Heslo</label>
+        <input class="form-ctrl" type="password" name="password"
+               autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary login-submit">Přihlásit se</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('at_theme', next);
+}
+</script>
+</body>
+</html>

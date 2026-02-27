@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Tisk QR štítků — AssetTrack{% endblock %}
+{% block page_title %}Tisk QR štítků{% endblock %}
+{% block head %}
+<style>
+.tab-nav { display:flex; gap:0; border-bottom:1px solid var(--line); margin-bottom:16px; }
+.tab-btn { height:32px; padding:0 16px; font-size:12px; font-weight:500; font-family:var(--f); background:none; border:none; border-bottom:2px solid transparent; color:var(--t3); cursor:pointer; margin-bottom:-1px; transition:all 0.12s; }
+.tab-btn.active { color:var(--orange); border-bottom-color:var(--orange); }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+.check-row { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line); cursor:pointer; transition:background 0.1s; }
+.check-row:hover { background:var(--bg3); }
+.check-row input[type=checkbox] { width:14px; height:14px; accent-color:var(--orange); flex-shrink:0; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Tisk QR štítků</span>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('items',this)">Položky majetku</button>
+  <button class="tab-btn" onclick="switchTab('locs',this)">Lokace / Místnosti</button>
+</div>
+
+<!-- Items tab -->
+<div class="tab-pane active" id="tab-items">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-ghost" onclick="toggleAll('item-check',true)">Vybrat vše</button>
+    <button class="btn btn-ghost" onclick="toggleAll('item-check',false)">Odznačit vše</button>
+    <button class="btn btn-primary" onclick="printItems()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Generovat PDF štítků
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:40px"><input type="checkbox" id="checkAllItems" onchange="toggleAll('item-check',this.checked)" style="accent-color:var(--orange)"></th>
+          <th>Název</th><th>Kód</th><th>Kategorie</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr onclick="document.getElementById('ic-{{ item.id }}').click()">
+          <td><input type="checkbox" class="item-check" id="ic-{{ item.id }}" value="{{ item.id }}" style="accent-color:var(--orange)" onclick="event.stopPropagation()"></td>
+          <td>{{ item.name }}</td>
+          <td><span class="id-badge">{{ item.code }}</span></td>
+          <td class="sec">{{ item.category or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní položky</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Locations tab -->
+<div class="tab-pane" id="tab-locs">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-ghost" onclick="toggleAll('loc-check',true)">Vybrat vše</button>
+    <button class="btn btn-ghost" onclick="toggleAll('loc-check',false)">Odznačit vše</button>
+    <button class="btn btn-primary" onclick="printLocs()">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Generovat PDF štítků lokací
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th style="width:40px"><input type="checkbox" id="checkAllLocs" onchange="toggleAll('loc-check',this.checked)" style="accent-color:var(--orange)"></th>
+          <th>Název</th><th>Kód</th><th>Budova</th><th>Patro</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for loc in locations %}
+        <tr onclick="document.getElementById('lc-{{ loc.id }}').click()">
+          <td><input type="checkbox" class="loc-check" id="lc-{{ loc.id }}" value="{{ loc.id }}" style="accent-color:var(--orange)" onclick="event.stopPropagation()"></td>
+          <td>{{ loc.name }}</td>
+          <td><span class="id-badge">{{ loc.code }}</span></td>
+          <td class="sec">{{ loc.building or '—' }}</td>
+          <td class="dim">{{ loc.floor or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní lokace</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleAll(cls, val) {
+  document.querySelectorAll('.' + cls).forEach(function(c) { c.checked = val; });
+}
+function printItems() {
+  var ids = Array.from(document.querySelectorAll('.item-check:checked')).map(function(c) { return c.value; }).join(',');
+  if (!ids) { alert('Vyberte alespoň jednu položku'); return; }
+  window.open('/api/qr/batch?ids=' + ids + '&type=item', '_blank');
+}
+function printLocs() {
+  var ids = Array.from(document.querySelectorAll('.loc-check:checked')).map(function(c) { return c.value; }).join(',');
+  if (!ids) { alert('Vyberte alespoň jednu lokaci'); return; }
+  window.open('/api/qr/batch?ids=' + ids + '&type=location', '_blank');
+}
+</script>
+{% endblock %}

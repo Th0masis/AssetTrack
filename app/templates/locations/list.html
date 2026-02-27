@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Lokace — AssetTrack{% endblock %}
+{% block page_title %}Lokace{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Lokace</span>
+  {% if request.session.get('role') in ['spravce', 'admin'] %}
+  <a href="#" class="sh-action desktop-only" onclick="document.getElementById('add-loc-modal').classList.add('open');return false">+ Přidat lokaci</a>
+  {% endif %}
+</div>
+
+<div class="search-row">
+  <input class="search-input" type="text" placeholder="Hledat místnost nebo kód…" oninput="filterLocs(this.value)">
+</div>
+
+{% set items_list = page_data.items %}
+{% set seen_buildings = [] %}
+{% for loc in items_list %}
+  {% if loc.building not in seen_buildings %}
+    {% if seen_buildings %}
+      </tbody></table></div>
+    {% endif %}
+    {% set _ = seen_buildings.append(loc.building) %}
+    <span class="loc-group-label">{{ loc.building or 'Ostatní' }}</span>
+    <div class="tbl-wrap" style="margin-bottom:20px">
+      <table class="tbl">
+        <thead><tr><th>Místnost</th><th>Kód</th><th>Položek</th><th>Patro</th><th style="width:36px"></th></tr></thead>
+        <tbody>
+  {% endif %}
+  <tr onclick="window.location='/lokace/{{ loc.id }}'">
+    <td>{{ loc.name }}</td>
+    <td><span class="id-badge">{{ loc.code }}</span></td>
+    <td class="dim">{{ item_counts.get(loc.id, 0) }}</td>
+    <td class="sec">{{ loc.floor or '—' }}</td>
+    <td onclick="event.stopPropagation()">
+      {% if request.session.get('role') in ['spravce', 'admin'] %}
+      <button class="btn-icon" title="Upravit"
+        onclick="openEditLoc(this)"
+        data-id="{{ loc.id }}"
+        data-name="{{ loc.name | e }}"
+        data-code="{{ loc.code | e }}"
+        data-building="{{ loc.building or '' | e }}"
+        data-floor="{{ loc.floor or '' | e }}"
+        data-description="{{ loc.description or '' | e }}">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      {% endif %}
+    </td>
+  </tr>
+{% endfor %}
+{% if items_list %}
+        </tbody>
+      </table>
+    </div>
+{% else %}
+<div style="padding:48px;text-align:center;color:var(--t3);font-size:13px">Žádné lokace</div>
+{% endif %}
+
+{% if page_data.pages > 1 %}
+<div class="pager">
+  {% for p in range(1, page_data.pages + 1) %}
+  <a class="pager-btn {% if p == page_data.page %}active{% endif %}" href="?page={{ p }}">{{ p }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Modal: Přidat lokaci -->
+<div class="overlay" id="add-loc-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Přidat lokaci</div>
+    <form id="addLocForm">
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" name="code" required style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" name="name" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Budova</label>
+        <input class="form-ctrl" type="text" name="building">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Patro</label>
+        <input class="form-ctrl" type="text" name="floor">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('add-loc-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Přidat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Upravit lokaci -->
+<div class="overlay" id="edit-loc-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Upravit lokaci</div>
+    <form id="editLocForm">
+      <input type="hidden" id="editLocId">
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" id="editLocName" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" id="editLocCode" required style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Budova</label>
+        <input class="form-ctrl" type="text" id="editLocBuilding">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Patro</label>
+        <input class="form-ctrl" type="text" id="editLocFloor">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Popis</label>
+        <textarea class="form-ctrl" id="editLocDescription"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('edit-loc-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterLocs(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.tbl tbody tr').forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+document.getElementById('addLocForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(this));
+  const res = await fetch('/api/locations', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { const err = await res.json(); alert(err.detail); }
+});
+
+function openEditLoc(btn) {
+  var d = btn.dataset;
+  document.getElementById('editLocId').value = d.id;
+  document.getElementById('editLocName').value = d.name;
+  document.getElementById('editLocCode').value = d.code;
+  document.getElementById('editLocBuilding').value = d.building;
+  document.getElementById('editLocFloor').value = d.floor;
+  document.getElementById('editLocDescription').value = d.description;
+  document.getElementById('edit-loc-modal').classList.add('open');
+}
+
+document.getElementById('editLocForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  var id = document.getElementById('editLocId').value;
+  var payload = {
+    name: document.getElementById('editLocName').value,
+    code: document.getElementById('editLocCode').value,
+    building: document.getElementById('editLocBuilding').value || null,
+    floor: document.getElementById('editLocFloor').value || null,
+    description: document.getElementById('editLocDescription').value || null,
+  };
+  var res = await fetch('/api/locations/' + id, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { var err = await res.json(); alert(err.detail || 'Chyba při ukládání'); }
+});
+</script>
+{% endblock %}

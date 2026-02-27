@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Vyřazený majetek — AssetTrack{% endblock %}
+{% block page_title %}Vyřazený majetek{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Vyřazený majetek</span>
+  <a href="/api/export/excel/disposals" class="sh-action">Export Excel</a>
+</div>
+
+<form method="get" class="search-row" style="margin-bottom:16px">
+  <select class="filter-select" name="year">
+    <option value="">Všechny roky</option>
+    {% for y in available_years %}
+    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+  <select class="filter-select" name="reason">
+    <option value="">Všechny důvody</option>
+    {% for val, label in reason_choices %}
+    <option value="{{ val }}" {% if val == selected_reason %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-ghost">Filtrovat</button>
+  <a href="/vyrazeni" class="btn btn-ghost">Zrušit</a>
+</form>
+
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Název</th>
+        <th>Kód</th>
+        <th>Důvod</th>
+        <th>Datum vyřazení</th>
+        <th>Doklad</th>
+        <th>Protokol</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in page_data.items %}
+      <tr>
+        <td><a href="/majetek/{{ d.item_id }}" style="color:var(--t1)">{{ d.item_name or '—' }}</a></td>
+        <td><span class="id-badge">{{ d.item_code or '—' }}</span></td>
+        <td>
+          {% set _rb = {'liquidation':'badge-dead','theft':'badge-dead','loss':'badge-dead','sale':'badge-done','donation':'badge-done','transfer':'badge-warn'} %}
+          <span class="badge {{ _rb.get(d.reason, 'badge-warn') }}">{{ reason_labels[d.reason] }}</span>
+        </td>
+        <td class="dim">{{ d.disposed_at.strftime('%d.%m.%Y') }}</td>
+        <td class="dim">{{ d.document_ref or '—' }}</td>
+        <td>
+          <a href="/api/export/pdf/disposal/{{ d.id }}" target="_blank" class="btn btn-ghost" style="height:24px;font-size:11px;padding:0 8px">PDF</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="color:var(--t3);text-align:center;padding:24px">Žádné vyřazené položky</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if page_data.pages > 1 %}
+<div class="pager">
+  {% for p in range(1, page_data.pages + 1) %}
+  <a class="pager-btn {% if p == page_data.page %}active{% endif %}"
+     href="?page={{ p }}{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_reason %}&reason={{ selected_reason }}{% endif %}">{{ p }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div style="font-size:11px;color:var(--t3);margin-top:12px">Celkem: <strong style="color:var(--t2)">{{ page_data.total }}</strong> vyřazených položek</div>
+
+{% endblock %}

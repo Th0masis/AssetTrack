@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} — AssetTrack{% endblock %}
+{% block page_title %}{{ item.name }}{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <a href="/majetek" class="btn btn-ghost">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Zpět na majetek
+  </a>
+</div>
+
+<div class="detail-head">
+  <div class="detail-name">{{ item.name }}</div>
+  <div class="detail-meta-row">
+    <span class="id-badge lg">{{ item.code }}</span>
+    <span class="detail-location">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      {% if current_assignment %}{{ current_assignment.location.name }}{% else %}—{% endif %}
+    </span>
+    <span class="badge {% if item.is_active %}badge-done{% else %}badge-dead{% endif %}">
+      {% if item.is_active %}Aktivní{% else %}Vyřazeno{% endif %}
+    </span>
+  </div>
+  <div class="detail-actions">
+    {% if item.is_active and request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn btn-primary desktop-only" onclick="document.getElementById('move-modal').classList.add('open')">Přesunout</button>
+    {% endif %}
+    {% if request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn btn-ghost desktop-only" onclick="document.getElementById('edit-modal').classList.add('open')">Upravit</button>
+    {% endif %}
+    <a href="/api/qr/item/{{ item.id }}" class="btn btn-ghost" target="_blank">Tisknout QR</a>
+    {% if item.is_active and request.session.get('role') in ['spravce', 'admin'] %}
+    <button class="btn btn-danger desktop-only" onclick="document.getElementById('dispose-modal').classList.add('open')">Vyřadit</button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="sh"><span class="sh-title">Informace</span></div>
+<div class="info-grid">
+  <div class="info-row">
+    <div class="info-key">Kód</div>
+    <div class="info-val mono">{{ item.code }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Kategorie</div>
+    <div class="info-val {% if not item.category %}empty{% endif %}">{{ item.category or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Sériové číslo</div>
+    <div class="info-val mono {% if not item.serial_number %}empty{% endif %}">{{ item.serial_number or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Datum nákupu</div>
+    <div class="info-val {% if not item.purchase_date %}empty{% endif %}">{{ item.purchase_date.strftime('%d.%m.%Y') if item.purchase_date else 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Pořizovací cena</div>
+    <div class="info-val {% if not item.purchase_price %}empty{% endif %}">{% if item.purchase_price %}{{ item.purchase_price }} Kč{% else %}Nezadáno{% endif %}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Zodpovědná osoba</div>
+    <div class="info-val {% if not item.responsible_person %}empty{% endif %}">{{ item.responsible_person or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Popis</div>
+    <div class="info-val {% if not item.description %}empty{% endif %}">{{ item.description or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Aktuální lokace</div>
+    <div class="info-val">{% if current_assignment %}{{ current_assignment.location.name }}{% else %}<span class="empty">Nepřiřazeno</span>{% endif %}</div>
+  </div>
+</div>
+
+{% if disposal %}
+<div class="sh"><span class="sh-title">Záznam o vyřazení</span></div>
+<div class="info-grid">
+  <div class="info-row">
+    <div class="info-key">Důvod</div>
+    <div class="info-val">{{ disposal_reason_label }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Datum vyřazení</div>
+    <div class="info-val mono">{{ disposal.disposed_at.strftime('%d.%m.%Y %H:%M') }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Číslo dokladu</div>
+    <div class="info-val mono {% if not disposal.document_ref %}empty{% endif %}">{{ disposal.document_ref or 'Nezadáno' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-key">Poznámka</div>
+    <div class="info-val {% if not disposal.note %}empty{% endif %}">{{ disposal.note or 'Nezadáno' }}</div>
+  </div>
+</div>
+<div style="margin-bottom:16px">
+  <a href="/api/export/pdf/disposal/{{ disposal.id }}" class="btn btn-ghost" target="_blank">
+    <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Protokol o vyřazení (PDF)
+  </a>
+</div>
+{% endif %}
+
+<div class="sh"><span class="sh-title">Historie přesunů</span></div>
+<div class="timeline">
+  {% for a in history %}
+  <div class="timeline-row">
+    <div class="timeline-date">{{ a.assigned_at.strftime('%d.%m.%Y') }}</div>
+    <div class="timeline-event">
+      {% if loop.first %}<strong>Aktuální</strong> — {% endif %}
+      <strong>{{ a.location.name }}</strong>
+    </div>
+    <div class="timeline-who">{{ a.note or '' }}</div>
+  </div>
+  {% else %}
+  <div style="padding:24px;text-align:center;color:var(--t3);font-size:13px">Žádná historie přesunů</div>
+  {% endfor %}
+</div>
+
+<!-- QR kód -->
+<div class="sh"><span class="sh-title">QR kód</span></div>
+<div class="qr-card">
+  <img src="/api/qr/item/{{ item.id }}" alt="QR kód položky {{ item.code }}" class="qr-img">
+  <div class="qr-info">
+    <div style="font-size:11px;color:var(--t3)">URL pro skenování:</div>
+    <div class="qr-url mono">{{ scan_url }}</div>
+    <a href="/api/qr/item/{{ item.id }}" class="btn btn-ghost" download="qr-{{ item.code }}.png">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Stáhnout PNG
+    </a>
+  </div>
+</div>
+
+<!-- Modal: Upravit položku -->
+<div class="overlay" id="edit-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Upravit — <span class="id-badge">{{ item.code }}</span></div>
+    <form id="editForm">
+      <div class="form-group">
+        <label class="form-label">Název *</label>
+        <input class="form-ctrl" type="text" name="name" value="{{ item.name }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kód *</label>
+        <input class="form-ctrl" type="text" name="code" value="{{ item.code }}" required style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategorie</label>
+        <input class="form-ctrl" type="text" name="category" value="{{ item.category or '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sériové číslo</label>
+        <input class="form-ctrl" type="text" name="serial_number" value="{{ item.serial_number or '' }}" style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Datum nákupu</label>
+        <input class="form-ctrl" type="date" name="purchase_date" value="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pořizovací cena (Kč)</label>
+        <input class="form-ctrl" type="number" step="0.01" min="0" name="purchase_price" value="{{ item.purchase_price or '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zodpovědná osoba</label>
+        <input class="form-ctrl" type="text" name="responsible_person" value="{{ item.responsible_person or '' }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Popis</label>
+        <textarea class="form-ctrl" name="description">{{ item.description or '' }}</textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('edit-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if item.is_active %}
+<!-- Modal: Přesunout -->
+<div class="overlay" id="move-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Přesunout — <span class="id-badge">{{ item.code }}</span></div>
+    <form id="moveForm">
+      <div class="form-group">
+        <label class="form-label">Cílová lokace</label>
+        <select class="form-ctrl" name="location_id" required>
+          <option value="">Vyberte lokaci…</option>
+          {% for loc in locations %}
+          <option value="{{ loc.id }}"
+            {% if current_assignment and current_assignment.location_id == loc.id %}selected{% endif %}>
+            {{ loc.name }} ({{ loc.code }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poznámka <span style="color:var(--t3);font-weight:400">(volitelné)</span></label>
+        <textarea class="form-ctrl" name="note"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('move-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Přesunout</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Vyřadit -->
+<div class="overlay" id="dispose-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Vyřadit — <span class="id-badge">{{ item.code }}</span></div>
+    <form id="disposeForm">
+      <div class="form-group">
+        <label class="form-label">Důvod *</label>
+        <select class="form-ctrl" name="reason" required>
+          <option value="">Vyberte důvod…</option>
+          <option value="liquidation">Fyzická likvidace</option>
+          <option value="sale">Prodej</option>
+          <option value="donation">Darování</option>
+          <option value="theft">Krádež</option>
+          <option value="loss">Ztráta</option>
+          <option value="transfer">Přesun mimo firmu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Číslo dokladu <span style="color:var(--t3);font-weight:400">(volitelné)</span></label>
+        <input class="form-ctrl" type="text" name="document_ref" style="font-family:var(--fm)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Poznámka</label>
+        <textarea class="form-ctrl" name="note"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('dispose-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-danger">Potvrdit vyřazení</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('editForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const payload = {};
+  for (const [k, v] of fd.entries()) {
+    if (v === '') { payload[k] = null; }
+    else if (k === 'purchase_price') { payload[k] = parseFloat(v); }
+    else { payload[k] = v; }
+  }
+  const res = await fetch('/api/items/{{ item.id }}', {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { const err = await res.json(); alert(err.detail || 'Chyba při ukládání'); }
+});
+
+{% if item.is_active %}
+document.getElementById('moveForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const payload = { item_id: {{ item.id }}, location_id: parseInt(fd.get('location_id')) };
+  if (fd.get('note')) payload.note = fd.get('note');
+  const res = await fetch('/api/moves', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { const err = await res.json(); alert(err.detail); }
+});
+
+document.getElementById('disposeForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const fd = new FormData(this);
+  const payload = { reason: fd.get('reason') };
+  if (fd.get('document_ref')) payload.document_ref = fd.get('document_ref');
+  if (fd.get('note')) payload.note = fd.get('note');
+  const res = await fetch('/api/items/{{ item.id }}/dispose', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) { window.location.reload(); }
+  else { const err = await res.json(); alert(err.detail); }
+});
+{% endif %}
+</script>
+{% endblock %}

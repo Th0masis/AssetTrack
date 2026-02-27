@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Správa uživatelů — AssetTrack{% endblock %}
+{% block page_title %}Správa uživatelů{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Uživatelé</span>
+  <a href="#" class="sh-action" onclick="document.getElementById('add-user-modal').classList.add('open');return false">+ Přidat uživatele</a>
+</div>
+
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Uživatelské jméno</th>
+        <th>E-mail</th>
+        <th>Role</th>
+        <th>Stav</th>
+        <th style="width:140px"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>
+          <strong>{{ u.username }}</strong>
+          {% if u.id == request.session.get('user_id') %}
+          <span class="badge badge-active" style="margin-left:6px;font-size:9px">Já</span>
+          {% endif %}
+        </td>
+        <td class="dim">{{ u.email }}</td>
+        <td>
+          <form method="post" action="/admin/uzivatele/{{ u.id }}/role" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <select name="role" class="filter-select" style="height:26px;font-size:11px;padding:0 4px"
+              onchange="this.form.submit()"
+              {% if u.id == request.session.get('user_id') %}disabled title="Nemůžete měnit vlastní roli"{% endif %}>
+              {% for r in valid_roles %}
+              <option value="{{ r }}" {% if u.role == r %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </td>
+        <td>
+          <span class="badge {% if u.is_active %}badge-done{% else %}badge-dead{% endif %}">
+            {% if u.is_active %}Aktivní{% else %}Neaktivní{% endif %}
+          </span>
+        </td>
+        <td style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-ghost" style="height:26px;font-size:11px;padding:0 8px"
+            onclick="openPwdModal({{ u.id }}, '{{ u.username | e }}')">Heslo</button>
+          {% if u.id != request.session.get('user_id') %}
+          <form method="post" action="/admin/uzivatele/{{ u.id }}/toggle" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit" class="btn {% if u.is_active %}btn-danger{% else %}btn-ghost{% endif %}"
+              style="height:26px;font-size:11px;padding:0 8px">
+              {% if u.is_active %}Deaktivovat{% else %}Aktivovat{% endif %}
+            </button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal: Přidat uživatele -->
+<div class="overlay" id="add-user-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Přidat uživatele</div>
+    <form method="post" action="/admin/uzivatele">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <div class="form-group">
+        <label class="form-label">Uživatelské jméno *</label>
+        <input class="form-ctrl" type="text" name="username" required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail *</label>
+        <input class="form-ctrl" type="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Heslo *</label>
+        <input class="form-ctrl" type="password" name="password" required autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-ctrl" name="role">
+          {% for r in valid_roles %}
+          <option value="{{ r }}">{{ r }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('add-user-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Vytvořit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Změna hesla -->
+<div class="overlay" id="pwd-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Změna hesla — <span id="pwdUsername" class="id-badge"></span></div>
+    <form id="pwdForm" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <div class="form-group">
+        <label class="form-label">Nové heslo *</label>
+        <input class="form-ctrl" type="password" name="password" required autocomplete="new-password">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('pwd-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Uložit heslo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openPwdModal(id, username) {
+  document.getElementById('pwdUsername').textContent = username;
+  document.getElementById('pwdForm').action = '/admin/uzivatele/' + id + '/password';
+  document.getElementById('pwd-modal').classList.add('open');
+}
+</script>
+{% endblock %}

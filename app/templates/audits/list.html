@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Inventury — AssetTrack{% endblock %}
+{% block page_title %}Inventury{% endblock %}
+{% block content %}
+
+<div class="sh" style="margin-top:0">
+  <span class="sh-title">Inventury</span>
+  {% if request.session.get('role') in ['spravce', 'admin'] %}
+  <a href="#" class="sh-action desktop-only" onclick="document.getElementById('new-audit-modal').classList.add('open');return false">+ Nová inventura</a>
+  {% endif %}
+</div>
+
+<div class="search-row">
+  <input class="search-input" type="text" placeholder="Hledat inventuru…" oninput="filterAudits(this.value)">
+  <select class="filter-select" id="auditStatusFilter" onchange="filterAudits(document.querySelector('.search-input').value)">
+    <option value="">Vše stavy</option>
+    <option value="open">Probíhá</option>
+    <option value="closed">Uzavřena</option>
+  </select>
+</div>
+
+<div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr><th>Název</th><th>Zahájeno</th><th>Stav</th></tr>
+    </thead>
+    <tbody id="audit-tbody">
+      {% for audit in audits %}
+      <tr onclick="window.location='/inventury/{{ audit.id }}'" data-status="{{ audit.status }}" data-name="{{ audit.name | lower }}">
+        <td>{{ audit.name }}</td>
+        <td class="dim">{{ audit.started_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        <td>
+          <span class="badge {% if audit.status == 'open' %}badge-active{% else %}badge-done{% endif %}">
+            {% if audit.status == 'open' %}Probíhá{% else %}Uzavřena{% endif %}
+          </span>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3" style="color:var(--t3);text-align:center;padding:24px">Žádné inventury</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal: Nová inventura -->
+<div class="overlay" id="new-audit-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Nová inventura</div>
+    <form id="addAuditForm">
+      <div class="form-group">
+        <label class="form-label">Název inventury *</label>
+        <input class="form-ctrl" type="text" name="name" required placeholder="např. Inventura Q1 2026">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('new-audit-modal').classList.remove('open')">Zrušit</button>
+        <button type="submit" class="btn btn-primary">Vytvořit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterAudits(q) {
+  q = (q || '').toLowerCase();
+  var status = document.getElementById('auditStatusFilter').value;
+  document.querySelectorAll('#audit-tbody tr[data-status]').forEach(function(row) {
+    var nameMatch = !q || row.dataset.name.includes(q);
+    var statusMatch = !status || row.dataset.status === status;
+    row.style.display = (nameMatch && statusMatch) ? '' : 'none';
+  });
+}
+
+document.getElementById('addAuditForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(this));
+  const res = await fetch('/api/audits', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)});
+  if (res.ok) { const audit = await res.json(); window.location.href = '/inventury/' + audit.id; }
+  else { const err = await res.json(); alert(err.detail); }
+});
+</script>
+{% endblock %}
