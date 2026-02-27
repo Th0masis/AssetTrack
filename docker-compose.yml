@@ -5,7 +5,7 @@ services:
     expose:
       - "8000"
     volumes:
-      - ./data:/app/data
+      - sqlite_data:/app/data
     env_file:
       - .env
     healthcheck:
@@ -50,4 +50,5 @@ services:
       start_period: 20s
 
 volumes:
+  sqlite_data:
   mariadb_data:
