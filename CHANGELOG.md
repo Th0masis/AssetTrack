@@ -1,5 +1,29 @@
 # CHANGELOG — AssetTrack
 
+## [1.5.0] — 2026-02-27
+
+### Nové funkce
+
+- **HTTPS / SSL** — nginx servíruje aplikaci přes HTTPS na portu 8443; self-signed certifikát generován příkazem `make ssl IP=<ip>`; vyžadováno pro QR skener (kamera v prohlížeči nutí secure context)
+- **Auto-vytvoření admina** — při prvním startu aplikace se automaticky vytvoří admin uživatel z `FIRST_ADMIN_USER` / `FIRST_ADMIN_PASS` v `.env`; dříve bylo nutné spustit `make seed` ručně
+
+### Opravené problémy
+
+- **Statické soubory za HTTPS proxy** — `url_for('static',...)` generoval `http://` URL na HTTPS stránce → prohlížeč blokoval CSS/JS (mixed content); opraveno na root-relativní cesty `/static/...`
+- **Docker bind mount — SQLite** — spuštění bez existující složky `./data` způsobovalo `OperationalError: unable to open database file`; opraveno přidáním `mkdir -p data && chmod 777 data` do `make prod` a `user: "0:0"` v docker-compose
+- **Absolute SQLite path** — `DATABASE_URL` v docker-compose nastaven na absolutní cestu `sqlite:////app/data/inventory.db` aby nedocházelo k chybám relativního rozlišení cesty v kontejneru
+
+### Docker & nasazení
+
+- **`entrypoint.sh`** — nový startovací skript; spouští `alembic upgrade head` před uvicornem; DB migrace proběhnou automaticky při každém startu
+- **Health check** — `wget` nahrazen `python -c urllib.request`; spolehlivější v Alpine Python image; `start_period` prodloužen na 30 s
+- **`docker-compose` → `docker compose`** — Makefile aktualizován na Compose V2 syntaxi
+- **`version:` odstraněno** — deprecated pole odstraněno z obou compose souborů
+- **Port 80 odebrán** — nginx nyní exposes pouze `8443:443`; port 80 ponechán Traefiku na stejném hostu
+- **`ProxyHeadersMiddleware`** — přidán do FastAPI pro správné zpracování `X-Forwarded-Proto` za nginx proxy
+
+---
+
 ## [1.4.0] — 2026-02-27
 
 ### Nové funkce
