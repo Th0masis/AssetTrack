@@ -9,6 +9,8 @@ services:
       - ./data:/app/data
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=sqlite:////app/data/inventory.db
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
       interval: 30s
