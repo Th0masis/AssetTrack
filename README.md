@@ -224,3 +224,35 @@ make test       # 99 testů
 make test-unit  # jen unit testy modelů
 make test-api   # jen API testy
 ```
+
+## Screenshots
+
+### Desktop
+
+<table>
+  <tr>
+    <td><img src="Screenshots/AssetTrack_PC1.png" width="300"></td>
+    <td><img src="Screenshots/AssetTrack_PC2.png" width="300"></td>
+    <td><img src="Screenshots/AssetTrack_PC3.png" width="300"></td>
+  </tr>
+  <tr>
+    <td><img src="Screenshots/AssetTrack_PC4.png" width="300"></td>
+    <td><img src="Screenshots/AssetTrack_PC5.png" width="300"></td>
+    <td></td>
+  </tr>
+</table>
+
+### Mobile
+
+<table>
+  <tr>
+    <td><img src="Screenshots/IMG_8111.jpeg" width="200"></td>
+    <td><img src="Screenshots/IMG_8112.jpeg" width="200"></td>
+    <td><img src="Screenshots/IMG_8113.jpeg" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="Screenshots/IMG_8114.jpeg" width="200"></td>
+    <td><img src="Screenshots/IMG_8116.jpeg" width="200"></td>
+    <td></td>
+  </tr>
+</table>
