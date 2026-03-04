@@ -112,16 +112,16 @@ def generate_location_qr(db: Session, loc_id: int) -> bytes:
 # ── PDF štítky pro položky ─────────────────────────────────────────────────────
 
 def generate_batch_pdf(db: Session, item_ids: list[int]) -> bytes:
-    """PDF se štítky pro položky — čtvercový QR ~3.3 cm + kód + název."""
+    """PDF se štítky pro položky — čtvercový QR 2 cm + kód + název."""
     items = [db.get(Item, iid) for iid in item_ids if db.get(Item, iid)]
 
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     page_width, page_height = A4
 
-    label_w = 50 * mm   # šířka štítku
-    label_h = 48 * mm   # výška štítku
-    qr_size = 33 * mm   # QR kód 3.3 × 3.3 cm — vždy čtvercový
+    label_w = 30 * mm   # šířka štítku
+    label_h = 35 * mm   # výška štítku
+    qr_size = 20 * mm   # QR kód 2 × 2 cm — vždy čtvercový
     margin = 8 * mm
 
     cols = int((page_width - margin) / (label_w + margin))
@@ -152,7 +152,7 @@ def generate_batch_pdf(db: Session, item_ids: list[int]) -> bytes:
 
         # Název položky
         c.setFont(_FONT_REGULAR, 7)
-        c.drawCentredString(x + label_w / 2, y + 2.5 * mm, _t(item.name[:28]))
+        c.drawCentredString(x + label_w / 2, y + 2.5 * mm, _t(item.name[:16]))
 
         # Rámeček
         c.setStrokeColor(colors.black)
@@ -166,17 +166,17 @@ def generate_batch_pdf(db: Session, item_ids: list[int]) -> bytes:
 # ── PDF štítky pro lokace ──────────────────────────────────────────────────────
 
 def generate_location_batch_pdf(db: Session, loc_ids: list[int]) -> bytes:
-    """PDF se štítky pro lokace — čtvercový QR ~3.5 cm + kód + název, modrý header."""
+    """PDF se štítky pro lokace — čtvercový QR 2 cm + kód + název, modrý header."""
     locations = [db.get(Location, lid) for lid in loc_ids if db.get(Location, lid)]
 
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     page_width, page_height = A4
 
-    label_w = 60 * mm   # šířka štítku
-    label_h = 56 * mm   # výška štítku
-    qr_size = 35 * mm   # QR kód 3.5 × 3.5 cm — vždy čtvercový
-    header_h = 10 * mm  # výška modrého záhlaví
+    label_w = 30 * mm   # šířka štítku
+    label_h = 40 * mm   # výška štítku
+    qr_size = 20 * mm   # QR kód 2 × 2 cm — vždy čtvercový
+    header_h = 8 * mm   # výška modrého záhlaví
     margin = 8 * mm
 
     cols = int((page_width - margin) / (label_w + margin))
@@ -196,12 +196,12 @@ def generate_location_batch_pdf(db: Session, loc_ids: list[int]) -> bytes:
         c.rect(x, y + label_h - header_h, label_w, header_h, fill=True, stroke=False)
         c.setFillColor(colors.white)
         c.setFont(_FONT_BOLD, 8)
-        c.drawCentredString(x + label_w / 2, y + label_h - 6.5 * mm, "LOKACE / ROOM")
+        c.drawCentredString(x + label_w / 2, y + label_h - 5 * mm, "LOKACE / ROOM")
 
         # QR kód — čtvercový, centrovaný, s 1 mm mezerou pod záhlavím
         c.setFillColor(colors.black)
         qr_x = x + (label_w - qr_size) / 2
-        qr_y = y + 10 * mm  # 10 mm dole pro text; QR sahá do y+45mm, záhlaví od y+46mm
+        qr_y = y + 10 * mm  # 10 mm dole pro text; QR sahá do y+30mm, záhlaví od y+32mm
         qr_png = _make_qr_bytes(f"{settings.BASE_URL}/scan/{loc.code}")
         c.drawImage(
             ImageReader(io.BytesIO(qr_png)),
@@ -215,7 +215,7 @@ def generate_location_batch_pdf(db: Session, loc_ids: list[int]) -> bytes:
 
         # Název místnosti
         c.setFont(_FONT_REGULAR, 8)
-        c.drawCentredString(x + label_w / 2, y + 3 * mm, _t(loc.name[:32]))
+        c.drawCentredString(x + label_w / 2, y + 3 * mm, _t(loc.name[:16]))
 
         # Modrý rámeček
         c.setStrokeColor(colors.HexColor("#0d6efd"))

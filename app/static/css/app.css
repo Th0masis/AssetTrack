@@ -546,6 +546,17 @@ button { font-family: var(--f); cursor: pointer; }
 .tbl td.sec { color: var(--t2); }
 .tbl td.dim { color: var(--t3); font-family: var(--fm); font-size: 11px; }
 
+/* ── LOCATION TABLE — consistent column widths across building groups ── */
+.tbl--loc th:nth-child(2),
+.tbl--loc td:nth-child(2) { width: 130px; max-width: 130px; overflow: hidden; }
+.tbl--loc td:nth-child(2) .id-badge { max-width: 110px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+.tbl--loc th:nth-child(3),
+.tbl--loc td:nth-child(3) { width: 72px; }
+.tbl--loc th:nth-child(4),
+.tbl--loc td:nth-child(4) { width: 72px; }
+.tbl--loc th:nth-child(5),
+.tbl--loc td:nth-child(5) { width: 36px; }
+
 /* ── AUDIT CARD ── */
 .audit-card {
   border: 1px solid var(--line);

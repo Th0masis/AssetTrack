@@ -16,15 +16,25 @@
     hx-get="/majetek/search"
     hx-target="#item-tbody"
     hx-trigger="keyup changed delay:300ms"
-    hx-include="[name='category']">
+    hx-include="[name='category'],[name='location_id']">
   <select class="filter-select" name="category"
     hx-get="/majetek/search"
     hx-target="#item-tbody"
     hx-trigger="change"
-    hx-include="[name='search']">
+    hx-include="[name='search'],[name='location_id']">
     <option value="">Vše kategorie</option>
     {% for cat in categories %}
       <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+    {% endfor %}
+  </select>
+  <select class="filter-select" name="location_id"
+    hx-get="/majetek/search"
+    hx-target="#item-tbody"
+    hx-trigger="change"
+    hx-include="[name='search'],[name='category']">
+    <option value="">Vše místnosti</option>
+    {% for loc in locations %}
+      <option value="{{ loc.id }}" {% if loc.id == selected_location %}selected{% endif %}>{{ loc.name }}{% if loc.building %} · {{ loc.building }}{% endif %}</option>
     {% endfor %}
   </select>
 </div>
@@ -51,7 +61,7 @@
 <div class="pager">
   {% for p in range(1, page_data.pages + 1) %}
   <a class="pager-btn {% if p == page_data.page %}active{% endif %}"
-     href="?page={{ p }}&search={{ search }}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ p }}</a>
+     href="?page={{ p }}&search={{ search }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_location %}&location_id={{ selected_location }}{% endif %}">{{ p }}</a>
   {% endfor %}
 </div>
 {% endif %}

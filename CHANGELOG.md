@@ -1,5 +1,21 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.0] — 2026-03-04
+
+### Nové funkce
+
+- **Filtr místností — Majetek** — seznam majetku `/majetek` rozšířen o dropdown filtr místností; filtr funguje přes HTMX live search spolu s existujícím filtrem kategorie a vyhledáváním; paginace zachovává zvolený filtr
+- **Filtr místností — Tisk štítků** — záložka „Položky majetku" na `/tisk` obsahuje dropdown filtru místností; zobrazí pouze položky z vybrané místnosti; nový sloupec „Místnost" v tabulce; tlačítko „Vybrat viditelné" vybere jen filtrované řádky
+- **Filtr budov — Tisk štítků (lokace)** — záložka „Lokace / Místnosti" na `/tisk` obsahuje dropdown filtru budov; zobrazí pouze lokace z vybrané budovy
+- **Lokace — oprava šířek sloupců** — tabulky lokací seskupené podle budov nyní mají konzistentní šířky sloupců napříč skupinami (CSS třída `tbl--loc` s pevnými šířkami sloupců 2–5)
+- **Přetečení kódu lokace** — `.id-badge` v sloupci kódu oříznut na 110 px s `text-overflow: ellipsis`; zabrání rozlití layoutu u dlouhých kódů
+
+### QR štítky
+
+- **Velikost QR kódu** — hromadný tisk štítků (`/api/qr/batch`) upraven: QR kód nyní **2 × 2 cm** (dříve 3,3 / 3,5 cm); štítek položky 30 × 35 mm, štítek lokace 30 × 40 mm
+
+---
+
 ## [1.5.0] — 2026-02-27
 
 ### Nové funkce

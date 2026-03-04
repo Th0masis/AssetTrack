@@ -24,8 +24,8 @@
     {% set _ = seen_buildings.append(loc.building) %}
     <span class="loc-group-label">{{ loc.building or 'Ostatní' }}</span>
     <div class="tbl-wrap" style="margin-bottom:20px">
-      <table class="tbl">
-        <thead><tr><th>Místnost</th><th>Kód</th><th>Položek</th><th>Patro</th><th style="width:36px"></th></tr></thead>
+      <table class="tbl tbl--loc">
+        <thead><tr><th>Místnost</th><th>Kód</th><th>Položek</th><th>Patro</th><th></th></tr></thead>
         <tbody>
   {% endif %}
   <tr onclick="window.location='/lokace/{{ loc.id }}'">

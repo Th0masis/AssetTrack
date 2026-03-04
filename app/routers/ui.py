@@ -139,8 +139,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/majetek", response_class=HTMLResponse)
-def items_list(request: Request, page: int = 1, search: str = "", category: str = "", db: Session = Depends(get_db)):
-    result = item_svc.get_items(db, page=page, size=20, search=search, category=category)
+def items_list(request: Request, page: int = 1, search: str = "", category: str = "", location_id: int = 0, db: Session = Depends(get_db)):
+    result = item_svc.get_items(db, page=page, size=20, search=search, category=category, location_id=location_id or None)
 
     # Enrich items with current_location
     items = []
@@ -159,7 +159,7 @@ def items_list(request: Request, page: int = 1, search: str = "", category: str 
         select(Item.category).where(Item.is_active == True, Item.category != None).distinct()
     ).all()
 
-    locations = db.scalars(select(Location).where(Location.is_active == True).order_by(Location.name)).all()
+    locations = db.scalars(select(Location).where(Location.is_active == True).order_by(Location.building, Location.name)).all()
 
     return templates.TemplateResponse("items/list.html", {
         "request": request,
@@ -167,14 +167,15 @@ def items_list(request: Request, page: int = 1, search: str = "", category: str 
         "items": items,
         "search": search,
         "selected_category": category,
+        "selected_location": location_id,
         "categories": sorted([c for c in categories if c]),
         "locations": locations,
     })
 
 
 @router.get("/majetek/search", response_class=HTMLResponse)
-def items_search(request: Request, search: str = "", category: str = "", db: Session = Depends(get_db)):
-    result = item_svc.get_items(db, page=1, size=50, search=search, category=category)
+def items_search(request: Request, search: str = "", category: str = "", location_id: int = 0, db: Session = Depends(get_db)):
+    result = item_svc.get_items(db, page=1, size=50, search=search, category=category, location_id=location_id or None)
     items = []
     for item in result.items:
         assignment = item_svc.get_current_location(db, item.id)
@@ -326,8 +327,15 @@ def scan_page(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/tisk", response_class=HTMLResponse)
 def print_page(request: Request, db: Session = Depends(get_db)):
-    items = db.scalars(select(Item).where(Item.is_active == True)).all()
-    locations = db.scalars(select(Location).where(Location.is_active == True)).all()
+    raw_items = db.scalars(select(Item).where(Item.is_active == True).order_by(Item.name)).all()
+    locations = db.scalars(select(Location).where(Location.is_active == True).order_by(Location.building, Location.name)).all()
+    loc_map = {loc.id: loc for loc in locations}
+    items = []
+    for item in raw_items:
+        assignment = item_svc.get_current_location(db, item.id)
+        item.current_location_id = assignment.location_id if assignment else None
+        item.current_location = loc_map[assignment.location_id].name if assignment and assignment.location_id in loc_map else None
+        items.append(item)
     return templates.TemplateResponse("print.html", {
         "request": request,
         "items": items,

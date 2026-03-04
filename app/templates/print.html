@@ -26,8 +26,14 @@
 
 <!-- Items tab -->
 <div class="tab-pane active" id="tab-items">
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <button class="btn btn-ghost" onclick="toggleAll('item-check',true)">Vybrat vše</button>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <select class="filter-select" id="filterItemLoc" onchange="filterItemsByLoc(this.value)" style="height:32px">
+      <option value="">Všechny místnosti</option>
+      {% for loc in locations %}
+      <option value="{{ loc.id }}">{{ loc.name }}{% if loc.building %} · {{ loc.building }}{% endif %}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-ghost" onclick="toggleVisible('item-check',true)">Vybrat viditelné</button>
     <button class="btn btn-ghost" onclick="toggleAll('item-check',false)">Odznačit vše</button>
     <button class="btn btn-primary" onclick="printItems()">
       <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -38,20 +44,21 @@
     <table class="tbl">
       <thead>
         <tr>
-          <th style="width:40px"><input type="checkbox" id="checkAllItems" onchange="toggleAll('item-check',this.checked)" style="accent-color:var(--orange)"></th>
-          <th>Název</th><th>Kód</th><th>Kategorie</th>
+          <th style="width:40px"><input type="checkbox" id="checkAllItems" onchange="toggleVisible('item-check',this.checked)" style="accent-color:var(--orange)"></th>
+          <th>Název</th><th>Kód</th><th>Místnost</th><th>Kategorie</th>
         </tr>
       </thead>
       <tbody>
         {% for item in items %}
-        <tr onclick="document.getElementById('ic-{{ item.id }}').click()">
+        <tr onclick="document.getElementById('ic-{{ item.id }}').click()" data-loc="{{ item.current_location_id or '' }}">
           <td><input type="checkbox" class="item-check" id="ic-{{ item.id }}" value="{{ item.id }}" style="accent-color:var(--orange)" onclick="event.stopPropagation()"></td>
           <td>{{ item.name }}</td>
           <td><span class="id-badge">{{ item.code }}</span></td>
+          <td class="sec">{{ item.current_location or '—' }}</td>
           <td class="sec">{{ item.category or '—' }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="4" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní položky</td></tr>
+        <tr><td colspan="5" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní položky</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -60,8 +67,18 @@
 
 <!-- Locations tab -->
 <div class="tab-pane" id="tab-locs">
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-    <button class="btn btn-ghost" onclick="toggleAll('loc-check',true)">Vybrat vše</button>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <select class="filter-select" id="filterLocBuilding" onchange="filterLocsByBuilding(this.value)" style="height:32px">
+      <option value="">Všechny budovy</option>
+      {% set seen = [] %}
+      {% for loc in locations %}
+        {% if loc.building and loc.building not in seen %}
+          {% set _ = seen.append(loc.building) %}
+          <option value="{{ loc.building }}">{{ loc.building }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+    <button class="btn btn-ghost" onclick="toggleVisible('loc-check',true)">Vybrat viditelné</button>
     <button class="btn btn-ghost" onclick="toggleAll('loc-check',false)">Odznačit vše</button>
     <button class="btn btn-primary" onclick="printLocs()">
       <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" width="13" height="13"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
@@ -72,13 +89,13 @@
     <table class="tbl">
       <thead>
         <tr>
-          <th style="width:40px"><input type="checkbox" id="checkAllLocs" onchange="toggleAll('loc-check',this.checked)" style="accent-color:var(--orange)"></th>
+          <th style="width:40px"><input type="checkbox" id="checkAllLocs" onchange="toggleVisible('loc-check',this.checked)" style="accent-color:var(--orange)"></th>
           <th>Název</th><th>Kód</th><th>Budova</th><th>Patro</th>
         </tr>
       </thead>
       <tbody>
         {% for loc in locations %}
-        <tr onclick="document.getElementById('lc-{{ loc.id }}').click()">
+        <tr onclick="document.getElementById('lc-{{ loc.id }}').click()" data-building="{{ loc.building or '' }}">
           <td><input type="checkbox" class="loc-check" id="lc-{{ loc.id }}" value="{{ loc.id }}" style="accent-color:var(--orange)" onclick="event.stopPropagation()"></td>
           <td>{{ loc.name }}</td>
           <td><span class="id-badge">{{ loc.code }}</span></td>
@@ -105,6 +122,21 @@ function switchTab(name, btn) {
 }
 function toggleAll(cls, val) {
   document.querySelectorAll('.' + cls).forEach(function(c) { c.checked = val; });
+}
+function toggleVisible(cls, val) {
+  document.querySelectorAll('.' + cls).forEach(function(c) {
+    if (c.closest('tr').style.display !== 'none') c.checked = val;
+  });
+}
+function filterItemsByLoc(locId) {
+  document.querySelectorAll('#tab-items tbody tr').forEach(function(row) {
+    row.style.display = (!locId || row.dataset.loc === locId) ? '' : 'none';
+  });
+}
+function filterLocsByBuilding(building) {
+  document.querySelectorAll('#tab-locs tbody tr').forEach(function(row) {
+    row.style.display = (!building || row.dataset.building === building) ? '' : 'none';
+  });
 }
 function printItems() {
   var ids = Array.from(document.querySelectorAll('.item-check:checked')).map(function(c) { return c.value; }).join(',');

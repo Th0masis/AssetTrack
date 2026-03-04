@@ -8,7 +8,7 @@ from app.schemas.pagination import Page
 import math
 
 
-def get_items(db: Session, page: int = 1, size: int = 50, search: str = "", category: str = "") -> Page:
+def get_items(db: Session, page: int = 1, size: int = 50, search: str = "", category: str = "", location_id: int | None = None) -> Page:
     query = select(Item).where(Item.is_active == True)
     if search:
         query = query.where(
@@ -18,6 +18,16 @@ def get_items(db: Session, page: int = 1, size: int = 50, search: str = "", cate
         )
     if category:
         query = query.where(Item.category == category)
+    if location_id:
+        current_loc_subq = (
+            select(Assignment.location_id)
+            .where(Assignment.item_id == Item.id)
+            .order_by(Assignment.assigned_at.desc())
+            .limit(1)
+            .correlate(Item)
+            .scalar_subquery()
+        )
+        query = query.where(current_loc_subq == location_id)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = db.scalars(query.offset((page - 1) * size).limit(size)).all()
     return Page(
