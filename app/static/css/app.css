@@ -557,6 +557,19 @@ button { font-family: var(--f); cursor: pointer; }
 .tbl--loc th:nth-child(5),
 .tbl--loc td:nth-child(5) { width: 36px; }
 
+/* ── ITEMS TABLE — fixed widths for secondary columns ── */
+.tbl--items th:nth-child(2),
+.tbl--items td:nth-child(2) { width: 130px; max-width: 130px; overflow: hidden; }
+.tbl--items td:nth-child(2) .id-badge { max-width: 110px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: middle; }
+.tbl--items th:nth-child(3),
+.tbl--items td:nth-child(3) { width: 160px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl--items th:nth-child(4),
+.tbl--items td:nth-child(4) { width: 120px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl--items th:nth-child(5),
+.tbl--items td:nth-child(5) { width: 80px; }
+.tbl--items th:nth-child(6),
+.tbl--items td:nth-child(6) { width: 36px; }
+
 /* ── AUDIT CARD ── */
 .audit-card {
   border: 1px solid var(--line);

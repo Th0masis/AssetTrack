@@ -1,5 +1,14 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.1] — 2026-03-04
+
+### Opravené problémy
+
+- **Majetek — šířky sloupců** — tabulka majetku dostala CSS třídu `tbl--items` s pevnými šířkami sekundárních sloupců (Kód 130px, Lokace 160px, Kategorie 120px, Pořízeno 80px); sjednoceno s logikou tabulky lokací (`tbl--loc`)
+- **Přetečení textu** — sloupce Lokace a Kategorie v tabulce majetku oříznuty pomocí `text-overflow: ellipsis`; stejné ošetření jako u kódu lokace
+
+---
+
 ## [1.6.0] — 2026-03-04
 
 ### Nové funkce
