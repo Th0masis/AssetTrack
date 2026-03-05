@@ -206,16 +206,16 @@ def generate_location_batch_pdf(db: Session, loc_ids: list[int]) -> bytes:
         x = margin + col * (label_w + margin)
         y = page_height - margin - (row + 1) * (label_h + margin)
 
-        # Modrý záhlaví pruh (nahoře) — zobrazí kód lokace místo "LOKACE / ROOM"
+        # Modrý záhlaví pruh (nahoře) — název místnosti
         c.setFillColor(colors.HexColor("#0d6efd"))
         c.rect(x, y + label_h - header_h, label_w, header_h, fill=True, stroke=False)
         c.setFillColor(colors.white)
-        header_text = _t(loc.code)
+        header_text = _t(loc.name)
         header_font_size = _fit_font_size(header_text, _FONT_BOLD, label_w - 2 * inner_pad, start_size=8.0)
         c.setFont(_FONT_BOLD, header_font_size)
         c.drawCentredString(x + label_w / 2, y + label_h - 5 * mm, header_text)
 
-        # QR kód — čtvercový, centrovaný, s 1 mm mezerou pod záhlavím
+        # QR kód — čtvercový, centrovaný
         c.setFillColor(colors.black)
         qr_x = x + (label_w - qr_size) / 2
         qr_y = y + 10 * mm
@@ -230,13 +230,7 @@ def generate_location_batch_pdf(db: Session, loc_ids: list[int]) -> bytes:
         code_text = _t(loc.code)
         code_font_size = _fit_font_size(code_text, _FONT_BOLD, label_w - 2 * inner_pad, start_size=9.0)
         c.setFont(_FONT_BOLD, code_font_size)
-        c.drawCentredString(x + label_w / 2, y + 6 * mm, code_text)
-
-        # Název místnosti
-        name_text = _t(loc.name)
-        name_font_size = _fit_font_size(name_text, _FONT_REGULAR, label_w - 2 * inner_pad, start_size=8.0)
-        c.setFont(_FONT_REGULAR, name_font_size)
-        c.drawCentredString(x + label_w / 2, y + 2.5 * mm, name_text)
+        c.drawCentredString(x + label_w / 2, y + 4 * mm, code_text)
 
         # Modrý rámeček
         c.setStrokeColor(colors.HexColor("#0d6efd"))

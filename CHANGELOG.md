@@ -4,10 +4,12 @@
 
 ### QR štítky
 
-- **Štítek lokace — záhlaví** — modrý header štítku nyní zobrazuje kód lokace (např. `BRN-0-HALA`) místo statického textu `LOKACE / ROOM`; auto-fit font zabrání přetečení u dlouhých kódů
-- **Štítek lokace — šířka** — šířka štítku rozšířena z 30 mm na 45 mm pro bezpečné zobrazení všech kódů; název místnosti a kód pod QR také používají auto-fit font
+- **Štítek lokace — záhlaví** — modrý header zobrazuje **název místnosti** (`loc.name`) s auto-fit fontem; kód lokace zůstává pod QR kódem
+- **Štítek lokace — pod QR** — název místnosti odstraněn (je v záhlaví); zobrazuje se jen kód lokace
+- **Štítek lokace — šířka** — šířka štítku rozšířena z 30 mm na 45 mm; auto-fit font pro záhlaví i kód pod QR
 - **Štítek majetku — nové rozložení** — QR kód vlevo + kód majetku vpravo vedle sebe, výška štítku **2 cm**; název položky na štítku odstraněn; kód auto-fit na dostupnou šířku
 - **Štítek majetku — velikost** — šířka 55 mm × výška 20 mm; QR čtverec 16 × 16 mm vertikálně vystředěn
+- **UI — verze** — verze v sidebaru zobrazena ve formátu `X.X` (bez patch čísla)
 
 ---
 
