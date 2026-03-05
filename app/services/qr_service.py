@@ -84,8 +84,8 @@ def _t(text: str) -> str:
 
 # ── Generování QR kódu (PNG) ──────────────────────────────────────────────────
 
-def _make_qr_bytes(url: str) -> bytes:
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+def _make_qr_bytes(url: str, border: int = 4) -> bytes:
+    qr = qrcode.QRCode(version=1, box_size=10, border=border)
     qr.add_data(url)
     qr.make(fit=True)
     img: PilImage = qr.make_image(fill_color="black", back_color="white")
@@ -143,7 +143,8 @@ def generate_batch_pdf(db: Session, item_ids: list[int]) -> bytes:
         # QR kód — vlevo, vertikálně vystředěn
         qr_x = x + pad
         qr_y = y + (label_h - qr_size) / 2
-        qr_png = _make_qr_bytes(f"{settings.BASE_URL}/scan/{item.code}")
+        # border=1 — minimální quiet zone, vzor QR vyplní téměř celý qr_size
+        qr_png = _make_qr_bytes(f"{settings.BASE_URL}/scan/{item.code}", border=1)
         c.drawImage(
             ImageReader(io.BytesIO(qr_png)),
             qr_x, qr_y,

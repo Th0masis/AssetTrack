@@ -51,7 +51,7 @@ async def lifespan(application: FastAPI):
 app = FastAPI(
     title="AssetTrack",
     description="Interní inventarizační systém",
-    version="1.6.3",
+    version="1.6.4",
     lifespan=lifespan,
 )
 
@@ -93,6 +93,8 @@ def _get_flashed_messages(ctx, with_categories=False):
 
 ui.templates.env.globals["get_flashed_messages"] = _get_flashed_messages
 ui.templates.env.globals["csrf_token"] = auth_ui.get_csrf_token
+_v = app.version.split(".")
+ui.templates.env.globals["app_version"] = f"{_v[0]}.{_v[1]}"
 
 # API routers
 app.include_router(health.router)
