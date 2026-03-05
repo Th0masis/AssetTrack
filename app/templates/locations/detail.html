@@ -153,7 +153,7 @@
         <td class="sec">{{ item.category or '—' }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="3" style="color:var(--t3);text-align:center;padding:24px">Na této lokaci nejsou žádné položky</td></tr>
+      <tr><td colspan="3" class="empty-state">Na této lokaci nejsou žádné položky</td></tr>
       {% endfor %}
     </tbody>
   </table>

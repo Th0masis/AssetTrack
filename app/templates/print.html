@@ -58,7 +58,7 @@
           <td class="sec">{{ item.category or '—' }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="5" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní položky</td></tr>
+        <tr><td colspan="5" class="empty-state">Žádné aktivní položky</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -103,7 +103,7 @@
           <td class="dim">{{ loc.floor or '—' }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="5" style="color:var(--t3);text-align:center;padding:24px">Žádné aktivní lokace</td></tr>
+        <tr><td colspan="5" class="empty-state">Žádné aktivní lokace</td></tr>
         {% endfor %}
       </tbody>
     </table>

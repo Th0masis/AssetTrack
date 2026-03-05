@@ -58,7 +58,7 @@
         <td class="dim" style="text-align:right;white-space:nowrap">{{ event.created_at.strftime("%d.%m. %H:%M") }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="3" style="padding:32px;text-align:center;color:var(--t3)">Žádné aktivity</td></tr>
+      <tr><td colspan="3" class="empty-state">Žádné aktivity</td></tr>
       {% endfor %}
     </tbody>
   </table>
