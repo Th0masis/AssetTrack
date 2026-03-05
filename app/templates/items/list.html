@@ -16,12 +16,12 @@
     hx-get="/majetek/search"
     hx-target="#item-tbody"
     hx-trigger="keyup changed delay:300ms"
-    hx-include="[name='category'],[name='location_id']">
+    hx-include=".search-row [name='category'],.search-row [name='location_id']">
   <select class="filter-select" name="category"
     hx-get="/majetek/search"
     hx-target="#item-tbody"
     hx-trigger="change"
-    hx-include="[name='search'],[name='location_id']">
+    hx-include=".search-row [name='search'],.search-row [name='location_id']">
     <option value="">Vše kategorie</option>
     {% for cat in categories %}
       <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
@@ -31,7 +31,7 @@
     hx-get="/majetek/search"
     hx-target="#item-tbody"
     hx-trigger="change"
-    hx-include="[name='search'],[name='category']">
+    hx-include=".search-row [name='search'],.search-row [name='category']">
     <option value="0">Vše místnosti</option>
     <option value="-1" {% if selected_location == -1 %}selected{% endif %}>— Nepřiřazeno</option>
     {% for loc in locations %}
@@ -52,7 +52,8 @@
         <th style="width:36px"></th>
       </tr>
     </thead>
-    <tbody id="item-tbody">
+    <tbody id="item-tbody"
+      hx-on::response-error="this.innerHTML='<tr><td colspan=\'6\' style=\'color:var(--red);text-align:center;padding:16px\'>Chyba filtru ('+event.detail.xhr.status+')</td></tr>'">
       {% include 'partials/item_row.html' %}
     </tbody>
   </table>

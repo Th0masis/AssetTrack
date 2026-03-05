@@ -17,7 +17,7 @@ def get_items(db: Session, page: int = 1, size: int = 50, search: str = "", cate
             | Item.serial_number.ilike(f"%{search}%")
         )
     if category:
-        query = query.where(Item.category == category)
+        query = query.where(Item.category.ilike(category))
     if location_id == -1:
         # Položky bez přiřazené lokace (žádný záznam v assignments)
         assigned_subq = select(Assignment.item_id).distinct().subquery()
