@@ -20,7 +20,7 @@ def scan_redirect(code: str, db: Session = Depends(get_db), _=Depends(require_us
     if item:
         active_audit = db.scalar(select(Audit).where(Audit.status == "open").limit(1))
         if active_audit:
-            return RedirectResponse(url=f"{settings.BASE_URL}/inventury/{active_audit.id}/sken/{code}")
+            return RedirectResponse(url=f"{settings.BASE_URL}/inventury/{active_audit.id}/sken/{item.code}")
         return RedirectResponse(url=f"{settings.BASE_URL}/majetek/{item.id}")
 
     # 2. Zkus lokaci

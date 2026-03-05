@@ -1,5 +1,14 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.5] — 2026-03-05
+
+### Bezpečnostní opravy
+
+- **Open redirect — `auth_ui.py`** — `_safe_next()` vracela původní `url` řetězec (tainted user input); přepracována tak, aby rekonstruovala redirect výhradně z `parsed.path` + `parsed.query`; CodeQL taint tracking i reálné prohlížeče vidí pouze sanitizované komponenty
+- **Open redirect — `scan.py`** — path parametr `code` (user input) tékl přímo do redirect URL pro inventuru; nahrazen `item.code` (hodnota načtená z databáze); funkce je ekvivalentní, taint tracking je spokojený
+
+---
+
 ## [1.6.4] — 2026-03-05
 
 ### UI

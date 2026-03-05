@@ -65,7 +65,13 @@ def _safe_next(url: str) -> str:
     parsed = urlparse(url)
     if parsed.scheme or parsed.netloc:
         return "/"
-    return url if url.startswith("/") else "/"
+    # Reconstruct from parsed components — never return raw user input
+    safe = parsed.path
+    if not safe.startswith("/"):
+        return "/"
+    if parsed.query:
+        safe += "?" + parsed.query
+    return safe
 
 
 def require_user(request: Request, db: Session = Depends(get_db)) -> User:
