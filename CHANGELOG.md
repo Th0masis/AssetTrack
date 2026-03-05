@@ -1,5 +1,16 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.2] — 2026-03-05
+
+### QR štítky
+
+- **Štítek lokace — záhlaví** — modrý header štítku nyní zobrazuje kód lokace (např. `BRN-0-HALA`) místo statického textu `LOKACE / ROOM`; auto-fit font zabrání přetečení u dlouhých kódů
+- **Štítek lokace — šířka** — šířka štítku rozšířena z 30 mm na 45 mm pro bezpečné zobrazení všech kódů; název místnosti a kód pod QR také používají auto-fit font
+- **Štítek majetku — nové rozložení** — QR kód vlevo + kód majetku vpravo vedle sebe, výška štítku **2 cm**; název položky na štítku odstraněn; kód auto-fit na dostupnou šířku
+- **Štítek majetku — velikost** — šířka 55 mm × výška 20 mm; QR čtverec 16 × 16 mm vertikálně vystředěn
+
+---
+
 ## [1.6.1] — 2026-03-04
 
 ### Opravené problémy
