@@ -10,6 +10,11 @@
 
 - **Štítek majetku — QR velikost** — snížen `border` z 4 na 1 modul; viditelný vzor QR nyní odpovídá definované hodnotě `qr_size=16 mm` (dříve ~13 mm kvůli bílému okraji)
 
+### Opravené problémy
+
+- **Filtr kategorie — HTMX 422** — `hx-include` pro vyhledávání a filtry byl stránkový (bez prefixu), čímž zachytával i stejnojmenná pole `name` a `category` v modálech (přidávání položky); FastAPI přijímal duplicitní parametry a vracel 422; opraveno scoped selektorem `.search-row [name='...']`
+- **Filtr kategorie — case-insensitive** — shoda kategorie v `item_service.py` změněna z `==` na `.ilike()` pro odolnost vůči různé velikosti písmen
+
 ---
 
 ## [1.6.3] — 2026-03-05
