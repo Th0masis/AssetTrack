@@ -2,8 +2,6 @@ import logging
 import secrets
 import time
 from collections import defaultdict
-from urllib.parse import urlparse
-
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -57,21 +55,6 @@ async def verify_csrf(request: Request) -> None:
     expected = request.session.get("_csrf_token", "")
     if not expected or not secrets.compare_digest(expected, submitted):
         raise HTTPException(status_code=403, detail="Neplatný bezpečnostní token")
-
-
-# ── Redirect helper ────────────────────────────────────────────────────────
-def _safe_next(url: str) -> str:
-    """Reject external/protocol-relative redirects, allow only same-origin paths."""
-    parsed = urlparse(url)
-    if parsed.scheme or parsed.netloc:
-        return "/"
-    # Reconstruct from parsed components — never return raw user input
-    safe = parsed.path
-    if not safe.startswith("/"):
-        return "/"
-    if parsed.query:
-        safe += "?" + parsed.query
-    return safe
 
 
 def require_user(request: Request, db: Session = Depends(get_db)) -> User:
@@ -139,7 +122,6 @@ def login_submit(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
-    next: str = Form(default="/"),
     db: Session = Depends(get_db),
 ):
     ip = request.client.host if request.client else "unknown"
@@ -169,7 +151,7 @@ def login_submit(
     request.session["user_id"] = user.id
     request.session["username"] = user.username
     request.session["role"] = user.role
-    return RedirectResponse(_safe_next(next), status_code=302)
+    return RedirectResponse("/", status_code=302)
 
 
 @router.get("/logout")

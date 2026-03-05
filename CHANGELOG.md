@@ -2,10 +2,10 @@
 
 ## [1.6.5] — 2026-03-05
 
-### Bezpečnostní opravy
+### Bezpečnostní opravy (CWE-601 — Open Redirect)
 
-- **Open redirect — `auth_ui.py`** — `_safe_next()` vracela původní `url` řetězec (tainted user input); přepracována tak, aby rekonstruovala redirect výhradně z `parsed.path` + `parsed.query`; CodeQL taint tracking i reálné prohlížeče vidí pouze sanitizované komponenty
-- **Open redirect — `scan.py`** — path parametr `code` (user input) tékl přímo do redirect URL pro inventuru; nahrazen `item.code` (hodnota načtená z databáze); funkce je ekvivalentní, taint tracking je spokojený
+- **`auth_ui.py` — odstraněn parametr `next`** — login formulář přijímal `next` jako POST field (původně z `?next=` query stringu); útočník mohl poslat odkaz `/login?next=//evil.com` a po přihlášení přesměrovat oběť na cizí doménu; parametr odstraněn, po přihlášení se vždy přesměruje na `/`; odstraněny i `_safe_next()` helper, `urlparse` import a hidden field v `login.html`
+- **`scan.py` — `code` nahrazen `item.code`** — path parametr `code` (user input) tékl přímo do redirect URL pro sken inventury; nahrazen `item.code` z databáze; funkčně identické, žádný user input v redirect cíli
 
 ---
 

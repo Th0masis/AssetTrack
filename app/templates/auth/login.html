@@ -34,8 +34,7 @@
     {% endif %}
 
     <form method="post" action="/login" class="login-form">
-      <input type="hidden" name="next" value="{{ request.query_params.get('next', '/') }}">
-      <div class="form-group">
+<div class="form-group">
         <label class="form-label">Uživatelské jméno</label>
         <input class="form-ctrl" type="text" name="username"
                value="{{ username or '' }}"
