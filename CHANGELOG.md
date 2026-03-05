@@ -1,5 +1,17 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.4] — 2026-03-05
+
+### UI
+
+- **Verze v sidebaru** — zobrazovaná verze (`vX.X`) se nyní čte přímo z `app.version` v `main.py` přes Jinja2 globál; patch číslo je automaticky ořezáno; při bumpu verze stačí měnit jediné místo
+
+### QR štítky
+
+- **Štítek majetku — QR velikost** — snížen `border` z 4 na 1 modul; viditelný vzor QR nyní odpovídá definované hodnotě `qr_size=16 mm` (dříve ~13 mm kvůli bílému okraji)
+
+---
+
 ## [1.6.3] — 2026-03-05
 
 ### Správa majetku
