@@ -18,7 +18,11 @@ def get_items(db: Session, page: int = 1, size: int = 50, search: str = "", cate
         )
     if category:
         query = query.where(Item.category == category)
-    if location_id:
+    if location_id == -1:
+        # Položky bez přiřazené lokace (žádný záznam v assignments)
+        assigned_subq = select(Assignment.item_id).distinct().subquery()
+        query = query.where(~Item.id.in_(select(assigned_subq.c.item_id)))
+    elif location_id:
         current_loc_subq = (
             select(Assignment.location_id)
             .where(Assignment.item_id == Item.id)

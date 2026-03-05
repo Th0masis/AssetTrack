@@ -140,7 +140,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/majetek", response_class=HTMLResponse)
 def items_list(request: Request, page: int = 1, search: str = "", category: str = "", location_id: int = 0, db: Session = Depends(get_db)):
-    result = item_svc.get_items(db, page=page, size=20, search=search, category=category, location_id=location_id or None)
+    result = item_svc.get_items(db, page=page, size=20, search=search, category=category, location_id=location_id if location_id != 0 else None)
 
     # Enrich items with current_location
     items = []
@@ -175,7 +175,7 @@ def items_list(request: Request, page: int = 1, search: str = "", category: str 
 
 @router.get("/majetek/search", response_class=HTMLResponse)
 def items_search(request: Request, search: str = "", category: str = "", location_id: int = 0, db: Session = Depends(get_db)):
-    result = item_svc.get_items(db, page=1, size=50, search=search, category=category, location_id=location_id or None)
+    result = item_svc.get_items(db, page=1, size=50, search=search, category=category, location_id=location_id if location_id != 0 else None)
     items = []
     for item in result.items:
         assignment = item_svc.get_current_location(db, item.id)
@@ -259,10 +259,35 @@ def locations_list(request: Request, page: int = 1, db: Session = Depends(get_db
 def location_detail(loc_id: int, request: Request, db: Session = Depends(get_db)):
     loc = loc_svc.get_location(db, loc_id)
     items = loc_svc.get_items_at_location(db, loc_id)
+    all_locations = db.scalars(select(Location).order_by(Location.is_active.desc(), Location.building, Location.name)).all()
+
+    # Počet položek bez viditelné lokace (bez assignment NEBO s assignment → neaktivní lokaci)
+    assigned_subq = select(Assignment.item_id).distinct().subquery()
+    no_assign_count = db.scalar(
+        select(func.count(Item.id))
+        .where(Item.is_active == True)
+        .where(~Item.id.in_(select(assigned_subq.c.item_id)))
+    ) or 0
+    # Položky s assignment → neaktivní lokaci
+    active_loc_subq = select(Location.id).where(Location.is_active == True).subquery()
+    latest_subq = (
+        select(Assignment.item_id, func.max(Assignment.assigned_at).label("max_at"))
+        .group_by(Assignment.item_id).subquery()
+    )
+    orphan_count = db.scalar(
+        select(func.count(Assignment.item_id.distinct()))
+        .join(latest_subq, (Assignment.item_id == latest_subq.c.item_id) &
+              (Assignment.assigned_at == latest_subq.c.max_at))
+        .where(~Assignment.location_id.in_(select(active_loc_subq.c.id)))
+    ) or 0
+    unlocated_count = no_assign_count + orphan_count
+
     return templates.TemplateResponse("locations/detail.html", {
         "request": request,
         "location": loc,
         "items": items,
+        "all_locations": all_locations,
+        "unlocated_count": unlocated_count,
     })
 
 

@@ -22,6 +22,7 @@
   <div class="detail-actions">
     {% if request.session.get('role') in ['spravce', 'admin'] %}
     <button class="btn btn-ghost desktop-only" onclick="document.getElementById('edit-modal').classList.add('open')">Upravit</button>
+    <button class="btn btn-ghost desktop-only" onclick="document.getElementById('bulk-move-modal').classList.add('open')">Přesunout položky z jiné lokace</button>
     {% endif %}
     <a href="/api/qr/location/{{ location.id }}" class="btn btn-ghost" target="_blank">Tisknout QR</a>
     {% if request.session.get('role') in ['spravce', 'admin'] %}
@@ -60,6 +61,32 @@
         <button type="submit" class="btn btn-primary">Uložit</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: Hromadný přesun položek z jiné lokace -->
+<div class="overlay" id="bulk-move-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-sheet">
+    <div class="modal-title">Přesunout položky z jiné lokace</div>
+    <p style="font-size:13px;color:var(--t2);margin:0 0 16px">
+      Všechny položky aktuálně přiřazené k vybrané zdrojové lokaci budou přesunuty sem (<strong>{{ location.name }}</strong>).
+    </p>
+    <div class="form-group">
+      <label class="form-label">Zdrojová lokace *</label>
+      <select class="form-ctrl" id="bulkFromLoc">
+        <option value="">— vyberte lokaci —</option>
+        {% for loc in all_locations %}
+          {% if loc.id != location.id %}
+          <option value="{{ loc.id }}">{{ loc.name }} · {{ loc.code }}{% if not loc.is_active %} [neaktivní]{% endif %}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+    <div id="bulkMoveResult" style="display:none;font-size:13px;margin-top:8px"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="document.getElementById('bulk-move-modal').classList.remove('open')">Zrušit</button>
+      <button type="button" class="btn btn-primary" onclick="doBulkMove()">Přesunout</button>
+    </div>
   </div>
 </div>
 
@@ -105,6 +132,13 @@
   </div>
 </div>
 
+{% if unlocated_count > 0 and request.session.get('role') in ['spravce', 'admin'] %}
+<div class="flash flash-warn" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+  <span>V systému je <strong>{{ unlocated_count }}</strong> položek bez přiřazené lokace.</span>
+  <button class="btn btn-primary" style="white-space:nowrap;flex-shrink:0" onclick="doAssignUnlocated()">Přiřadit sem vše</button>
+</div>
+{% endif %}
+
 <div class="sh"><span class="sh-title">Položky na této lokaci</span></div>
 <div class="tbl-wrap">
   <table class="tbl">
@@ -129,6 +163,39 @@
 
 {% block scripts %}
 <script>
+async function doAssignUnlocated() {
+  if (!confirm('Přiřadit všechny položky bez lokace sem ({{ location.name }})?')) return;
+  var res = await fetch('/api/moves/assign-unlocated/{{ location.id }}', { method: 'POST' });
+  var data = await res.json();
+  if (res.ok) {
+    alert('Přiřazeno ' + data.moved + ' položek.');
+    window.location.reload();
+  } else {
+    alert(data.detail || 'Chyba při přiřazování');
+  }
+}
+
+async function doBulkMove() {
+  var fromId = document.getElementById('bulkFromLoc').value;
+  if (!fromId) { alert('Vyberte zdrojovou lokaci'); return; }
+  var res = await fetch('/api/moves/bulk', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ from_location_id: parseInt(fromId), to_location_id: {{ location.id }} })
+  });
+  var data = await res.json();
+  var el = document.getElementById('bulkMoveResult');
+  el.style.display = '';
+  if (res.ok) {
+    el.style.color = 'var(--green)';
+    el.textContent = 'Přesunuto ' + data.moved + ' položek.';
+    setTimeout(function() { window.location.reload(); }, 1200);
+  } else {
+    el.style.color = 'var(--red)';
+    el.textContent = data.detail || 'Chyba při přesunu';
+  }
+}
+
 document.getElementById('editForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const fd = new FormData(this);

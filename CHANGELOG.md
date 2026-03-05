@@ -1,5 +1,19 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.3] — 2026-03-05
+
+### Správa majetku
+
+- **Filtr "Nepřiřazeno"** — dropdown místností v seznamu majetku obsahuje novou volbu `— Nepřiřazeno`; zobrazí jen položky bez jakéhokoli přiřazení k lokaci
+- **Oprava vyhledávání** — HTMX search selhal kvůli `location_id=` (prázdný řetězec) interpretovaného FastAPI jako neplatný `int`; výchozí option dropdownu změněn na `value="0"`, search nyní funguje správně
+
+### Správa lokací
+
+- **Hromadný přesun položek** — nový endpoint `POST /api/moves/bulk`; přesune všechny položky z jedné lokace do druhé (jeden API call); UI tlačítko "Přesunout položky z jiné lokace" na detailu lokace
+- **Přiřazení nepřiřazených položek** — nový endpoint `POST /api/moves/assign-unlocated/{loc_id}`; přiřadí sem všechny položky bez viditelné lokace (bez assignment + položky s assignment → neaktivní lokaci); UI banner na detailu lokace s počtem a tlačítkem "Přiřadit sem vše"
+
+---
+
 ## [1.6.2] — 2026-03-05
 
 ### QR štítky

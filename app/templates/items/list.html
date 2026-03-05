@@ -32,7 +32,8 @@
     hx-target="#item-tbody"
     hx-trigger="change"
     hx-include="[name='search'],[name='category']">
-    <option value="">Vše místnosti</option>
+    <option value="0">Vše místnosti</option>
+    <option value="-1" {% if selected_location == -1 %}selected{% endif %}>— Nepřiřazeno</option>
     {% for loc in locations %}
       <option value="{{ loc.id }}" {% if loc.id == selected_location %}selected{% endif %}>{{ loc.name }}{% if loc.building %} · {{ loc.building }}{% endif %}</option>
     {% endfor %}

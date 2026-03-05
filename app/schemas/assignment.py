@@ -8,6 +8,16 @@ class MoveRequest(BaseModel):
     note: str | None = None
 
 
+class BulkMoveRequest(BaseModel):
+    from_location_id: int
+    to_location_id: int
+    note: str | None = None
+
+
+class BulkMoveResponse(BaseModel):
+    moved: int
+
+
 class AssignmentResponse(BaseModel):
     id: int
     item_id: int
