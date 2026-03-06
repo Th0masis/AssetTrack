@@ -77,6 +77,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/favicon", StaticFiles(directory="favicon"), name="favicon")
 
 
 # --- Jinja2 flash helpers ---
