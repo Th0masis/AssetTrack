@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="Logo.svg" alt="AssetTrack logo" width="200">
+  <img src="Logo_big.svg" alt="AssetTrack logo" width="400">
 </p>
 
 # AssetTrack — Interní inventarizační systém
