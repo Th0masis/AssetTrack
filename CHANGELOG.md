@@ -1,5 +1,14 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.7] — 2026-03-06
+
+### Branding
+
+- **Favicon** — přidána sada favikon (`favicon/`) servovaná přes `/favicon/` mount; `base.html` obsahuje `<link>` tagy pro `favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `apple-touch-icon.png` a `site.webmanifest`; `site.webmanifest` aktualizován s názvem aplikace, tmavými barvami a správnými cestami
+- **Logo v README** — SVG logo přidáno na začátek `README.md`
+
+---
+
 ## [1.6.5] — 2026-03-05
 
 ### Bezpečnostní opravy (CWE-601 — Open Redirect)
