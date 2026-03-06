@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="Logo.svg" alt="AssetTrack logo" width="200">
+</p>
+
 # AssetTrack — Interní inventarizační systém
 
 Webová aplikace pro správu firemního majetku pomocí QR kódů a mobilního telefonu jako skeneru.
