@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="512"
+   height="512"
+   viewBox="0 0 135.46666 135.46667"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   sodipodi:docname="Logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.4378367"
+     inkscape:cx="284.45511"
+     inkscape:cy="271.58856"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <rect
+       x="91.804584"
+       y="101.54143"
+       width="201.69189"
+       height="221.16559"
+       id="rect2" />
+    <rect
+       x="91.804581"
+       y="101.54143"
+       width="201.69189"
+       height="221.16559"
+       id="rect2-4" />
+    <rect
+       x="91.804581"
+       y="101.54143"
+       width="201.69189"
+       height="221.16559"
+       id="rect2-5" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       transform="matrix(1.8884912,0,0,1.5671649,-116.25353,-119.65798)"
+       id="text1-2"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:53.3333px;font-family:ABBvoiceOffice;-inkscape-font-specification:'ABBvoiceOffice, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2-4);fill:#000000;fill-opacity:1;stroke:none;stroke-width:2.32512;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"><tspan
+         x="91.804688"
+         y="146.55432"
+         id="tspan3">T</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="matrix(1.7251139,0,0,1.7070904,-138.43276,-162.45989)"
+       id="text1-1"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:53.3333px;font-family:ABBvoiceOffice;-inkscape-font-specification:'ABBvoiceOffice, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2-5);fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.98126;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"><tspan
+         x="91.804688"
+         y="146.55432"
+         id="tspan4">A</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="matrix(1.5837111,0,0,1.5671649,-124.20889,-141.42403)"
+       id="text1"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:53.3333px;font-family:ABBvoiceOffice;-inkscape-font-specification:'ABBvoiceOffice, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect2);fill:#f28c28;fill-opacity:1;stroke:none;stroke-width:2.15816;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"><tspan
+         x="91.804688"
+         y="146.55432"
+         id="tspan5">A</tspan></text>
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:3.4;stroke-linecap:round;stroke-dasharray:none;stroke-opacity:1"
+       id="rect3"
+       width="7.2866173"
+       height="21.469496"
+       x="80.803375"
+       y="73.256523"
+       ry="3.6433086" />
+  </g>
+</svg>
