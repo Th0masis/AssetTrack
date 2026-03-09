@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}AssetTrack{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}AssetTrack — interní inventarizační systém pro správu firemního majetku pomocí QR kódů.{% endblock %}">
   <!-- Anti-flash: set theme before CSS loads -->
   <script>(function(){var t=localStorage.getItem('at_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
   <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
@@ -11,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
   <link rel="manifest" href="/favicon/site.webmanifest">
-  <link rel="stylesheet" href="/static/css/app.css?v=7">
+  <link rel="stylesheet" href="/static/css/app.css?v=8">
   <script src="/static/js/htmx.min.js" defer></script>
   {% block head %}{% endblock %}
 </head>
