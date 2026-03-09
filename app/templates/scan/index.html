@@ -1,10 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Skenovat QR — AssetTrack{% endblock %}
 {% block page_title %}Skenovat QR{% endblock %}
-{% block head %}
-<script src="/static/js/html5-qrcode.min.js"></script>
-<script src="/static/js/scan.js"></script>
-{% endblock %}
+{% block head %}{% endblock %}
 {% block content %}
 
 {% if active_audit %}
@@ -65,6 +62,8 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="/static/js/html5-qrcode.min.js"></script>
+<script src="/static/js/scan.js"></script>
 <script>
 {% if active_audit %}
 /* ── AUDIT MODE ── */
