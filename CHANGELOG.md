@@ -1,5 +1,18 @@
 # CHANGELOG — AssetTrack
 
+## [1.6.8] — 2026-03-09
+
+### Výkon & SEO (Lighthouse audit)
+
+- **Meta description** — přidán `<meta name="description">` do `base.html` s přepisovatelným `{% block meta_description %}`; opravuje SEO audit score
+- **HTTP/2** — zapnut `http2 on;` v `nginx/nginx.conf`; zlepšuje latenci multiplexováním požadavků
+- **Statické soubory přes nginx** — `/static/` a `/favicon/` servovány přímo nginxem (ne přes proxy na FastAPI); `expires 1y` + `Cache-Control: public, immutable`; do `docker-compose.yml` přidány volume mounty `./app/static:/srv/static:ro` a `./favicon:/srv/favicon:ro`
+- **Kontrast barev** — zvýšen kontrast sekundárního textu `--t3` pro splnění WCAG AA (4.5:1): dark téma `#636363 → #808080`, light téma `#999999 → #666666`
+- **Minifikace CSS** — `app.css` minifikován (32 KB → 26 KB, −20%); verze bumped na `?v=8`
+- **Render-blocking scripty** — `html5-qrcode.min.js` a `scan.js` přesunuty z `<head>` (blokující) do `{% block scripts %}` na konci `<body>` ve `scan/index.html`
+
+---
+
 ## [1.6.7] — 2026-03-06
 
 ### Branding
