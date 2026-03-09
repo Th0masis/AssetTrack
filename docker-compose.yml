@@ -30,6 +30,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./app/static:/srv/static:ro
+      - ./favicon:/srv/favicon:ro
     depends_on:
       app:
         condition: service_healthy
